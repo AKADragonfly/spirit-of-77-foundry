@@ -1,0 +1,57 @@
+{
+  "id": "spirit-of-77",
+  "title": "Spirit of '77",
+  "description": "A custom Foundry VTT system for the Spirit of '77 RPG, built on PbtA mechanics with 1970s styling and complete character sheet control. Based on the PbtA system by asacolips-projects and inspired by the Monsters of the Week implementation.",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": "11",
+    "verified": "12"
+  },
+  "authors": [
+    {
+      "name": "Your Name",
+      "email": "your.email@example.com"
+    }
+  ],
+  "esmodules": [
+    "module/spirit77.mjs"
+  ],
+  "styles": [
+    "styles/spirit77.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "gridDistance": 5,
+  "gridUnits": "ft",
+  "primaryTokenAttribute": "harm",
+  "secondaryTokenAttribute": null,
+  "initiative": "1d20",
+  "socket": false,
+  "manifest": "https://your-repo-url/system.json",
+  "download": "https://your-repo-url/releases/latest/download/system.zip",
+  "license": "LICENSE",
+  "readme": "README.md",
+  "bugs": "https://your-repo-url/issues",
+  "changelog": "https://your-repo-url/releases",
+  "relationships": {
+    "systems": [
+      {
+        "id": "pbta",
+        "type": "recommends",
+        "manifest": "https://github.com/asacolips-projects/pbta/releases/latest/download/system.json",
+        "reason": "This system is based on the PbtA framework"
+      }
+    ]
+  },
+  "flags": {
+    "hotReload": {
+      "extensions": ["css", "hbs", "json"],
+      "paths": ["templates", "lang"]
+    }
+  }
+}

@@ -1,0 +1,293 @@
+<form class="{{cssClass}} {{actor.type}} flexcol" autocomplete="off">
+
+  {{!-- Persistent Header - Always Visible --}}
+  <header class="sheet-header persistent-header">
+    <div class="rap-sheet-header">
+      <div class="header-stamp">
+        <div class="police-dept">POLICE DEPARTMENT</div>
+        <div class="arrest-record">ARREST RECORD</div>
+        <div class="case-number">Case #: {{actor._id}}</div>
+      </div>
+      
+      <div class="mugshot-area">
+        <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="100" width="100"/>
+        <div class="fingerprint-box">
+          <div class="fingerprint-label">PRINTS</div>
+          <div class="fingerprint-grid">
+            <div class="print"></div>
+            <div class="print"></div>
+            <div class="print"></div>
+            <div class="print"></div>
+            <div class="print"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="personal-info-grid">
+      <div class="info-row">
+        <div class="info-field">
+          <label>LAST NAME:</label>
+          <input name="system.details.lastName" type="text" value="{{system.details.lastName}}" placeholder="Surname"/>
+        </div>
+        <div class="info-field">
+          <label>FIRST NAME:</label>
+          <input name="system.details.firstName" type="text" value="{{system.details.firstName}}" placeholder="Given Name"/>
+        </div>
+        <div class="info-field small">
+          <label>M.I.:</label>
+          <input name="system.details.middleInitial" type="text" value="{{system.details.middleInitial}}" placeholder="X" maxlength="1"/>
+        </div>
+      </div>
+      
+      <div class="info-row">
+        <div class="info-field">
+          <label>KNOWN ALIASES:</label>
+          <input name="system.details.aliases" type="text" value="{{system.details.aliases}}" placeholder="Street names, nicknames"/>
+        </div>
+      </div>
+      
+      <div class="info-row">
+        <div class="info-field small">
+          <label>GENDER:</label>
+          <input name="system.details.gender" type="text" value="{{system.details.gender}}" placeholder="M/F"/>
+        </div>
+        <div class="info-field">
+          <label>DATE OF BIRTH:</label>
+          <input name="system.details.dateOfBirth" type="text" value="{{system.details.dateOfBirth}}" placeholder="MM/DD/YYYY"/>
+        </div>
+        <div class="info-field">
+          <label>PLACE OF BIRTH:</label>
+          <input name="system.details.placeOfBirth" type="text" value="{{system.details.placeOfBirth}}" placeholder="City, State"/>
+        </div>
+      </div>
+      
+      <div class="info-row">
+        <div class="info-field">
+          <label>MARITAL STATUS:</label>
+          <input name="system.details.maritalStatus" type="text" value="{{system.details.maritalStatus}}" placeholder="Single/Married/Divorced"/>
+        </div>
+        <div class="info-field">
+          <label>SOCIAL SECURITY NUMBER:</label>
+          <input name="system.details.socialSecurity" type="text" value="{{system.details.socialSecurity}}" placeholder="XXX-XX-XXXX"/>
+        </div>
+      </div>
+      
+      <div class="info-row">
+        <div class="info-field small">
+          <label>HEIGHT:</label>
+          <input name="system.details.height" type="text" value="{{system.details.height}}" placeholder="5'10&quot;"/>
+        </div>
+        <div class="info-field small">
+          <label>WEIGHT:</label>
+          <input name="system.details.weight" type="text" value="{{system.details.weight}}" placeholder="175 lbs"/>
+        </div>
+        <div class="info-field small">
+          <label>EYES:</label>
+          <input name="system.details.eyes" type="text" value="{{system.details.eyes}}" placeholder="Brown"/>
+        </div>
+        <div class="info-field small">
+          <label>HAIR:</label>
+          <input name="system.details.hair" type="text" value="{{system.details.hair}}" placeholder="Black"/>
+        </div>
+      </div>
+      
+      <div class="info-row">
+        <div class="info-field full-width">
+          <label>DISTINGUISHING CHARACTERISTICS:</label>
+          <input name="system.details.distinguishing" type="text" value="{{system.details.distinguishing}}" placeholder="Scars, tattoos, marks"/>
+        </div>
+      </div>
+      
+      <div class="info-row">
+        <div class="info-field">
+          <label>ADDRESS:</label>
+          <input name="system.details.address" type="text" value="{{system.details.address}}" placeholder="Street Address"/>
+        </div>
+        <div class="info-field">
+          <label>CITY:</label>
+          <input name="system.details.city" type="text" value="{{system.details.city}}" placeholder="City"/>
+        </div>
+        <div class="info-field small">
+          <label>STATE:</label>
+          <input name="system.details.state" type="text" value="{{system.details.state}}" placeholder="CA"/>
+        </div>
+        <div class="info-field small">
+          <label>ZIP:</label>
+          <input name="system.details.zipCode" type="text" value="{{system.details.zipCode}}" placeholder="90210"/>
+        </div>
+      </div>
+      
+      <div class="info-row">
+        <div class="info-field">
+          <label>TELEPHONE:</label>
+          <input name="system.details.telephone" type="text" value="{{system.details.telephone}}" placeholder="(555) 123-4567"/>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  {{!-- Sheet Tab Navigation --}}
+  <nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="character">Character</a>
+    <a class="item" data-tab="moves">Moves</a>
+    <a class="item" data-tab="gear">Gear & Thangs</a>
+    <a class="item" data-tab="notes">Notes & Hooks</a>
+  </nav>
+
+  {{!-- Sheet Body --}}
+  <section class="sheet-body">
+    
+    {{!-- Character Tab --}}
+    <div class="tab character" data-group="primary" data-tab="character">
+      <div class="character-main">
+        
+        {{!-- Character Fields --}}
+        <div class="character-fields">
+          <div class="field-group">
+            <div class="field">
+              <label>Role:</label>
+              <input name="system.character.role" type="text" value="{{system.character.role}}" placeholder="Your character's role"/>
+            </div>
+            <div class="field">
+              <label>Story:</label>
+              <input name="system.character.story" type="text" value="{{system.character.story}}" placeholder="Your character's story"/>
+            </div>
+            <div class="field">
+              <label>Buzz:</label>
+              <input name="system.character.buzz" type="text" value="{{system.character.buzz}}" placeholder="Your character's motivation"/>
+            </div>
+          </div>
+          
+          <div class="field-group">
+            <div class="field">
+              <label>Cash:</label>
+              <input name="system.character.cash" type="number" value="{{system.character.cash}}" min="0"/>
+            </div>
+            <div class="field">
+              <label>Experience:</label>
+              <input name="system.character.experience" type="number" value="{{system.character.experience}}" min="0"/>
+            </div>
+            <div class="field">
+              <label>Heat:</label>
+              <input name="system.character.heat" type="number" value="{{system.character.heat}}" min="0"/>
+            </div>
+          </div>
+        </div>
+
+        {{!-- Stats with Integrated Scars --}}
+        <div class="stats-section">
+          <h3>Stats</h3>
+          <div class="stats-grid">
+            {{#each system.stats as |stat key|}}
+            <div class="stat-block">
+              <div class="stat-header">
+                <label class="stat-label">{{stat.label}}</label>
+                <div class="stat-controls">
+                  <input class="stat-value" name="system.stats.{{key}}.value" type="number" value="{{stat.value}}" min="-3" max="3"/>
+                  {{#if (lookup ../system.scars key)}}
+                  <button type="button" class="scar-toggle {{#if (lookup ../system.scars key).active}}active{{/if}}" data-scar="{{key}}" title="{{(lookup ../system.scars key).name}}">
+                    <i class="fas fa-{{#if (lookup ../system.scars key).active}}check-{{/if}}square"></i>
+                  </button>
+                  {{/if}}
+                </div>
+              </div>
+              {{#if (lookup ../system.scars key)}}
+              <div class="scar-label">{{(lookup ../system.scars key).name}}</div>
+              {{/if}}
+              <div class="stat-effective">
+                Effective: {{stat.effectiveValue}}
+              </div>
+              <button type="button" class="stat-roll rollable" data-stat="{{key}}">
+                <i class="fas fa-dice-d20"></i> Roll {{stat.label}}
+              </button>
+            </div>
+            {{/each}}
+          </div>
+        </div>
+
+        {{!-- Roll Modifiers --}}
+        <div class="roll-modifiers">
+          <h3>Roll Modifiers</h3>
+          <div class="modifier-controls">
+            <div class="temp-modifier-field">
+              <label>Temporary Modifier:</label>
+              <input class="temp-modifier" name="system.resources.modifiers.temporary" type="number" value="{{system.resources.modifiers.temporary}}" placeholder="+/-"/>
+              <span class="modifier-hint">(e.g., +2 car power, -1 enemy armor)</span>
+            </div>
+            <div class="something-extra-field">
+              <button type="button" class="something-extra-toggle {{#if system.resources.modifiers.somethingExtra}}active{{/if}}" title="Roll with Something Extra (3d6 keep highest 2)">
+                <i class="fas fa-{{#if system.resources.modifiers.somethingExtra}}check-{{/if}}square"></i>
+                Something Extra
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {{!-- Harm Indicator --}}
+        <div class="harm-section">
+          <h3>Harm Indicator</h3>
+          <div class="harm-gauge">
+            <div class="gauge-header">
+              <span class="gauge-label-left">F</span>
+              <span class="gauge-title">CONDITION</span>
+              <span class="gauge-label-right">E</span>
+            </div>
+            <div class="gauge-body">
+              <div class="gauge-scale">
+                {{#each harmLevels}}
+                <div class="harm-level {{#if current}}current{{/if}}" data-harm="{{value}}">
+                  <div class="harm-tick"></div>
+                  <div class="harm-value">{{#unless (eq value 0)}}{{value}}{{/unless}}</div>
+                  <div class="harm-label">{{label}}</div>
+                </div>
+                {{/each}}
+              </div>
+              <div class="harm-controls">
+                <button type="button" class="harm-adjust" data-adjustment="-1">
+                  <i class="fas fa-minus"></i> Heal
+                </button>
+                <span class="current-harm">{{system.harm.value}}/{{system.harm.max}}</span>
+                <button type="button" class="harm-adjust" data-adjustment="1">
+                  <i class="fas fa-plus"></i> Harm
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          {{#if (gte system.harm.value 4)}}
+          <div class="harm-warning">
+            <strong>Something Less:</strong> Roll 3d6 and drop the highest die.
+          </div>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+
+    {{!-- Moves Tab --}}
+    <div class="tab moves" data-group="primary" data-tab="moves">
+      {{> "systems/spirit-of-77/templates/actor/parts/actor-moves.hbs"}}
+    </div>
+
+    {{!-- Gear & Thangs Tab --}}
+    <div class="tab gear" data-group="primary" data-tab="gear">
+      {{> "systems/spirit-of-77/templates/actor/parts/actor-gear.hbs"}}
+    </div>
+
+    {{!-- Notes & Hooks Tab --}}
+    <div class="tab notes" data-group="primary" data-tab="notes">
+      <div class="notes-content">
+        <div class="hooks-section">
+          <h3>Hooks</h3>
+          <textarea name="system.character.hooks" rows="8" placeholder="Character hooks, connections, debts, relationships...">{{system.character.hooks}}</textarea>
+        </div>
+        
+        <div class="biography-section">
+          <h3>Biography & Notes</h3>
+          {{editor content=system.biography target="system.biography" button=true owner=owner editable=editable}}
+        </div>
+      </div>
+    </div>
+
+  </section>
+</form>
