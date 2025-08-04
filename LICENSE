@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2025 AKADragonfly
+Copyright (c) 2025 [Your Name]
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +19,33 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+THIRD-PARTY ATTRIBUTIONS:
+
+This project incorporates patterns and structure from:
+
+1. PbtA System by asacolips-projects
+   - Repository: https://github.com/asacolips-projects/pbta
+   - License: MIT License
+   - Used: Base system architecture, document patterns, roll mechanics foundation
+
+2. Monsters of the Week for PbtA by Rangertheman  
+   - Repository: https://github.com/Rangertheman/motw-for-pbta
+   - Used: Reference implementation patterns for PbtA customization
+
+GAME CONTENT:
+
+This system implements mechanics from the Spirit of '77 RPG created by David Schirduan 
+and Joshua Macy. This is an unofficial fan-created implementation. Spirit of '77 RPG 
+and all related game content are the intellectual property of their respective creators.
+
+Support the official game: https://www.technicalgrimoire.com/
+
+FOUNDRY VTT:
+
+This system is designed for use with Foundry Virtual Tabletop and requires Foundry VTT 
+to function. Foundry VTT is created by Foundry Gaming LLC.
+
+Website: https://foundryvtt.com/
