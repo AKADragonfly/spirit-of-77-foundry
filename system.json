@@ -9,8 +9,8 @@
   },
   "authors": [
     {
-      "name": "Your Name",
-      "email": "your.email@example.com"
+      "name": "Aldo J. Regalado",
+      "email": "TGIDragonfly@gmail.com"
     }
   ],
   "esmodules": [
@@ -32,12 +32,12 @@
   "secondaryTokenAttribute": null,
   "initiative": "1d20",
   "socket": false,
-  "manifest": "https://your-repo-url/system.json",
-  "download": "https://your-repo-url/releases/latest/download/system.zip",
+  "manifest": "https://github.com/AKADragonfly/spirit-of-77/releases/latest/download/system.json",
+  "download": "https://github.com/AKADragonfly/spirit-of-77/releases/latest/download/system.zip",
   "license": "LICENSE",
   "readme": "README.md",
-  "bugs": "https://your-repo-url/issues",
-  "changelog": "https://your-repo-url/releases",
+  "bugs": "https://github.com/AKADragonfly/spirit-of-77/issues",
+  "changelog": "https://github.com/AKADragonfly/spirit-of-77/releases",
   "relationships": {
     "systems": [
       {
@@ -54,4 +54,5 @@
       "paths": ["templates", "lang"]
     }
   }
+
 }
