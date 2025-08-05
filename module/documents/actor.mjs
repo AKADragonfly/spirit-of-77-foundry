@@ -145,14 +145,14 @@ export class Spirit77Actor extends Actor {
   }
 
   /**
-   * Roll a stat check - SIMPLIFIED VERSION
+   * Roll a stat check - USING OLD ASYNC METHOD
    */
   async rollStat(statKey, options = {}) {
     const stat = this.system.stats[statKey];
     if (!stat) return;
 
-    // Get values directly without complex roll data
-    const statValue = parseInt(stat.value || 0) + parseInt(stat.scarPenalty || 0);
+    // Get values directly
+    const statValue = this.getStatValue(statKey);
     const tempModifier = parseInt(this.system.resources?.modifiers?.temporary || 0);
     const somethingExtra = this.system.resources?.modifiers?.somethingExtra || false;
     
@@ -181,30 +181,63 @@ export class Spirit77Actor extends Actor {
     let totalModifier = statValue + tempModifier;
     let rollFormula = `${diceFormula} + ${totalModifier}`;
     
-    console.log('Roll formula:', rollFormula); // Debug log
+    console.log('Roll formula:', rollFormula);
 
-    const roll = new Roll(rollFormula);
-    await roll.evaluateSync();
+    try {
+      const roll = new Roll(rollFormula);
+      
+      // Try the old async method first
+      try {
+        await roll.evaluate({ async: true });
+      } catch (asyncError) {
+        console.warn('Async roll failed, trying sync:', asyncError);
+        // Fallback to sync if async fails
+        roll.evaluateSync();
+      }
 
-    // Determine result type
-    let resultType = 'failure';
-    if (roll.total >= 10) resultType = 'success';
-    else if (roll.total >= 7) resultType = 'partial';
+      // Determine result type
+      let resultType = 'failure';
+      if (roll.total >= 10) resultType = 'success';
+      else if (roll.total >= 7) resultType = 'partial';
 
-    const messageData = {
-      speaker: ChatMessage.getSpeaker({ actor: this }),
-      roll: roll,
-      content: await this._formatRollMessage(statKey, roll, resultType, rollType, statValue, tempModifier),
-      sound: CONFIG.sounds.dice
-    };
+      const messageData = {
+        speaker: ChatMessage.getSpeaker({ actor: this }),
+        roll: roll,
+        content: await this._formatRollMessage(statKey, roll, resultType, rollType, statValue, tempModifier),
+        sound: CONFIG.sounds.dice
+      };
 
-    // Reset temporary modifiers after use
-    await this.update({
-      'system.resources.modifiers.temporary': 0,
-      'system.resources.modifiers.somethingExtra': false
-    });
+      // Reset temporary modifiers after use
+      await this.update({
+        'system.resources.modifiers.temporary': 0,
+        'system.resources.modifiers.somethingExtra': false
+      });
 
-    return ChatMessage.create(messageData);
+      return ChatMessage.create(messageData);
+      
+    } catch (error) {
+      console.error('Roll failed completely:', error);
+      
+      // Manual fallback - create a basic chat message
+      const manualRoll = Math.floor(Math.random() * 6) + 1 + Math.floor(Math.random() * 6) + 1 + totalModifier;
+      let resultType = 'failure';
+      if (manualRoll >= 10) resultType = 'success';
+      else if (manualRoll >= 7) resultType = 'partial';
+      
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: this }),
+        content: `
+          <div class="spirit77-roll">
+            <div class="roll-header">
+              <strong>${this.name}</strong> rolls ${stat.label} (Manual Roll - Foundry Issue)
+            </div>
+            <div class="roll-result ${resultType}">
+              ${manualRoll} - ${resultType.charAt(0).toUpperCase() + resultType.slice(1)}
+            </div>
+          </div>
+        `
+      });
+    }
   }
 
   /**
