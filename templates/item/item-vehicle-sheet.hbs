@@ -1,0 +1,84 @@
+<form class="{{cssClass}}" autocomplete="off">
+  <header class="sheet-header">
+    <img src="{{item.img}}" data-edit="img" title="{{item.name}}" height="64" width="64"/>
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Vehicle Name"/></h1>
+    </div>
+  </header>
+
+  <nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="description">Description</a>
+    <a class="item" data-tab="details">Details</a>
+  </nav>
+
+  <section class="sheet-body">
+    
+    <div class="tab" data-group="primary" data-tab="description">
+      <div class="form-group">
+        <label>Description:</label>
+        {{editor content=system.description target="system.description" button=true owner=owner editable=editable}}
+      </div>
+    </div>
+
+    <div class="tab" data-group="primary" data-tab="details">
+      
+      <div class="vehicle-info">
+        <div class="form-group">
+          <label>Make:</label>
+          <input name="system.make" type="text" value="{{system.make}}" placeholder="Ford, Chevy, etc."/>
+        </div>
+
+        <div class="form-group">
+          <label>Model:</label>
+          <input name="system.model" type="text" value="{{system.model}}" placeholder="Mustang, Camaro, etc."/>
+        </div>
+
+        <div class="form-group">
+          <label>Year:</label>
+          <input name="system.year" type="text" value="{{system.year}}" placeholder="1977"/>
+        </div>
+
+        <div class="form-group">
+          <label>Vehicle Type:</label>
+          <select name="system.vehicleType">
+            {{#each vehicleTypeOptions}}
+            <option value="{{key}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+            {{/each}}
+          </select>
+        </div>
+      </div>
+
+      <div class="vehicle-stats">
+        <div class="form-group">
+          <label>Power:</label>
+          <input name="system.power" type="number" value="{{system.power}}" min="0" max="5"/>
+          <small>Engine power and acceleration</small>
+        </div>
+
+        <div class="form-group">
+          <label>Looks:</label>
+          <input name="system.looks" type="number" value="{{system.looks}}" min="-2" max="3"/>
+          <small>How impressive/stylish the vehicle is</small>
+        </div>
+
+        <div class="form-group">
+          <label>Armor:</label>
+          <input name="system.armor" type="number" value="{{system.armor}}" min="0" max="5"/>
+          <small>How much protection it provides</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Traits:</label>
+        <input name="system.traits" type="text" value="{{join system.traits ', '}}" placeholder="fast, loud, offroad, unreliable"/>
+        <small>Comma-separated list of vehicle traits</small>
+      </div>
+
+      <div class="form-group">
+        <label>Notes:</label>
+        <textarea name="system.notes" rows="4" placeholder="Additional notes about this vehicle...">{{system.notes}}</textarea>
+      </div>
+
+    </div>
+  </section>
+</form>
