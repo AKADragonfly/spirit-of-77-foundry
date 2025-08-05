@@ -8,7 +8,7 @@ export class Spirit77ItemSheet extends ItemSheet {
 
   /** @override */
   static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
+    return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ["spirit77", "sheet", "item"],
       width: 520,
       height: 480,
@@ -21,7 +21,6 @@ export class Spirit77ItemSheet extends ItemSheet {
     const path = "systems/spirit-of-77/templates/item";
     // Return a single sheet for all item types.
     // return `${path}/item-sheet.hbs`;
-
     // Alternatively, you could use the following return statement to do a
     // unique item sheet by type, like `weapon-sheet.hbs`.
     return `${path}/item-${this.item.type}-sheet.hbs`;
@@ -79,14 +78,48 @@ export class Spirit77ItemSheet extends ItemSheet {
       }
     }
 
-    if (itemData.type === 'weapon') {
-      // Prepare weapon range options
+    if (itemData.type === 'gear') {
+      // Prepare weapon range options for gear (if it's a weapon)
       context.rangeOptions = [];
       for (let [key, label] of Object.entries(CONFIG.SPIRIT77.weaponRanges)) {
         context.rangeOptions.push({
           key: key,
           label: game.i18n.localize(label),
           selected: itemData.system.range === key
+        });
+      }
+    }
+
+    if (itemData.type === 'thang') {
+      // Prepare thang type options
+      context.thangTypeOptions = [];
+      for (let [key, label] of Object.entries(CONFIG.SPIRIT77.thangTypes)) {
+        context.thangTypeOptions.push({
+          key: key,
+          label: game.i18n.localize(label),
+          selected: itemData.system.thangType === key
+        });
+      }
+
+      // Prepare stat options for thangs
+      context.statOptions = [];
+      for (let [key, label] of Object.entries(CONFIG.SPIRIT77.stats)) {
+        context.statOptions.push({
+          key: key,
+          label: game.i18n.localize(label),
+          selected: itemData.system.rollStat === key
+        });
+      }
+    }
+
+    if (itemData.type === 'vehicle') {
+      // Prepare vehicle type options
+      context.vehicleTypeOptions = [];
+      for (let [key, label] of Object.entries(CONFIG.SPIRIT77.vehicleTypes)) {
+        context.vehicleTypeOptions.push({
+          key: key,
+          label: game.i18n.localize(label),
+          selected: itemData.system.vehicleType === key
         });
       }
     }
