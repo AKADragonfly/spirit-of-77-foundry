@@ -1,189 +1,108 @@
-<div class="gear-section">
+<div class="moves-section">
   
-  {{!-- Thangs --}}
-  <div class="gear-category">
+  {{!-- Basic Moves --}}
+  <div class="move-category">
     <div class="category-header">
-      <h3>Thangs</h3>
-      <button type="button" class="item-create" data-type="thang">
-        <i class="fas fa-plus"></i> Add Thang
+      <h3>Basic Moves</h3>
+      <button type="button" class="item-create" data-type="move" data-move-type="basic">
+        <i class="fas fa-plus"></i> Add Basic Move
       </button>
     </div>
-    <div class="thangs-list">
-      {{#each thangs}}
-      <div class="item thang" data-item-id="{{_id}}">
-        <div class="thang-header">
-          <div class="thang-image">
-            <img src="{{img}}" title="{{name}}" width="32" height="32"/>
-          </div>
-          <div class="thang-name-type">
-            <h4 class="thang-name">{{name}}</h4>
-            <span class="thang-type">{{capitalize system.thangType}}</span>
-          </div>
-          <div class="thang-controls">
-            <button type="button" class="item-edit" title="Edit Thang">
+    <div class="moves-list">
+      {{#each moves.basic}}
+      <div class="item move" data-item-id="{{_id}}">
+        <div class="move-header">
+          <h4 class="move-name">{{name}}</h4>
+          <div class="move-controls">
+            <button type="button" class="item-edit" title="Edit Move">
               <i class="fas fa-edit"></i>
             </button>
-            <button type="button" class="item-delete" title="Delete Thang">
+            <button type="button" class="item-delete" title="Delete Move">
               <i class="fas fa-trash"></i>
             </button>
           </div>
         </div>
-        <div class="thang-description">
+        <div class="move-stat">
+          <strong>{{capitalize system.stat}}</strong> Roll{{#if system.modifier}} {{system.modifier}}{{/if}}
+        </div>
+        <div class="move-description">
           {{system.description}}
         </div>
-        {{#if system.mechanical}}
-        <div class="thang-mechanical">
-          <strong>Roll:</strong> {{capitalize system.rollStat}}{{#if system.rollBonus}} {{#if (gt system.rollBonus 0)}}+{{/if}}{{system.rollBonus}}{{/if}}
-        </div>
-        {{/if}}
+        <button type="button" class="move-roll rollable" data-roll-type="item">
+          <i class="fas fa-dice-d20"></i> Roll Move
+        </button>
       </div>
       {{/each}}
     </div>
   </div>
 
-  {{!-- Vehicles --}}
-  <div class="gear-category">
+  {{!-- Role Moves --}}
+  <div class="move-category">
     <div class="category-header">
-      <h3>Vehicles</h3>
-      <button type="button" class="item-create" data-type="vehicle">
-        <i class="fas fa-plus"></i> Add Vehicle
+      <h3>Role Moves</h3>
+      <button type="button" class="item-create" data-type="move" data-move-type="role">
+        <i class="fas fa-plus"></i> Add Role Move
       </button>
     </div>
-    <div class="vehicles-list">
-      <div class="vehicle-header">
-        <div class="vehicle-name">Name</div>
-        <div class="vehicle-power">Power</div>
-        <div class="vehicle-looks">Looks</div>
-        <div class="vehicle-armor">Armor</div>
-        <div class="vehicle-controls">Controls</div>
-      </div>
-      {{#each vehicles}}
-      <div class="item vehicle" data-item-id="{{_id}}">
-        <div class="vehicle-name">
-          <div class="vehicle-image">
-            <img src="{{img}}" title="{{name}}" width="24" height="24"/>
-          </div>
-          <div class="vehicle-details">
-            <h4>{{name}}</h4>
-            <span class="vehicle-info">{{system.year}} {{system.make}} {{system.model}}</span>
-          </div>
-        </div>
-        <div class="vehicle-power">
-          {{system.power}}
-        </div>
-        <div class="vehicle-looks">
-          {{system.looks}}
-        </div>
-        <div class="vehicle-armor">
-          {{system.armor}}
-        </div>
-        <div class="vehicle-controls">
-          <button type="button" class="item-edit" title="Edit Vehicle">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button type="button" class="item-delete" title="Delete Vehicle">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
-      </div>
-      {{/each}}
-    </div>
-  </div>
-
-  {{!-- Gear --}}
-  <div class="gear-category">
-    <div class="category-header">
-      <h3>Gear</h3>
-      <button type="button" class="item-create" data-type="gear">
-        <i class="fas fa-plus"></i> Add Gear
-      </button>
-    </div>
-    <div class="gear-list">
-      <div class="gear-header">
-        <div class="gear-name">Name</div>
-        <div class="gear-harm">Harm</div>
-        <div class="gear-armor">Armor</div>
-        <div class="gear-qty">Qty</div>
-        <div class="gear-controls">Controls</div>
-      </div>
-      {{#each gear}}
-      <div class="item gear" data-item-id="{{_id}}">
-        <div class="gear-name">
-          <div class="gear-image">
-            <img src="{{img}}" title="{{name}}" width="24" height="24"/>
-          </div>
-          <div class="gear-details">
-            <h4>{{name}}</h4>
-            {{#if system.traits}}
-            <div class="gear-traits">
-              {{#each system.traits}}
-              <span class="trait">{{this}}</span>
-              {{/each}}
-            </div>
-            {{/if}}
-          </div>
-        </div>
-        <div class="gear-harm">
-          {{#if system.harm}}{{system.harm}}-harm{{/if}}
-        </div>
-        <div class="gear-armor">
-          {{#if system.armor}}{{system.armor}}-armor{{/if}}
-        </div>
-        <div class="gear-qty">
-          {{#if system.stock}}{{system.stock}} stock{{else}}{{system.quantity}}{{/if}}
-        </div>
-        <div class="gear-controls">
-          <button type="button" class="item-edit" title="Edit Gear">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button type="button" class="item-delete" title="Delete Gear">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
-      </div>
-      {{/each}}
-    </div>
-  </div>
-
-  {{!-- X-Tech --}}
-  <div class="gear-category">
-    <div class="category-header">
-      <h3>X-Tech</h3>
-      <button type="button" class="item-create" data-type="xtech">
-        <i class="fas fa-plus"></i> Add X-Tech
-      </button>
-    </div>
-    <div class="xtech-list">
-      {{#each xtech}}
-      <div class="item xtech" data-item-id="{{_id}}">
-        <div class="xtech-header">
-          <div class="xtech-image">
-            <img src="{{img}}" title="{{name}}" width="32" height="32"/>
-          </div>
-          <div class="xtech-name-type">
-            <h4 class="xtech-name">{{name}}</h4>
-            <span class="xtech-type">{{capitalize system.baseType}} Prototype</span>
-          </div>
-          <div class="xtech-controls">
-            <button type="button" class="item-edit" title="Edit X-Tech">
+    <div class="moves-list">
+      {{#each moves.role}}
+      <div class="item move" data-item-id="{{_id}}">
+        <div class="move-header">
+          <h4 class="move-name">{{name}}</h4>
+          <div class="move-controls">
+            <button type="button" class="item-edit" title="Edit Move">
               <i class="fas fa-edit"></i>
             </button>
-            <button type="button" class="item-delete" title="Delete X-Tech">
+            <button type="button" class="item-delete" title="Delete Move">
               <i class="fas fa-trash"></i>
             </button>
           </div>
         </div>
-        <div class="xtech-description">
+        <div class="move-stat">
+          <strong>{{capitalize system.stat}}</strong> Roll{{#if system.modifier}} {{system.modifier}}{{/if}}
+        </div>
+        <div class="move-description">
           {{system.description}}
         </div>
-        {{#if system.modifications}}
-        <div class="xtech-modifications">
-          <strong>Modifications:</strong>
-          {{#each system.modifications}}
-          <span class="modification">{{this}}</span>
-          {{/each}}
+        <button type="button" class="move-roll rollable" data-roll-type="item">
+          <i class="fas fa-dice-d20"></i> Roll Move
+        </button>
+      </div>
+      {{/each}}
+    </div>
+  </div>
+
+  {{!-- Story Moves --}}
+  <div class="move-category">
+    <div class="category-header">
+      <h3>Story Moves</h3>
+      <button type="button" class="item-create" data-type="move" data-move-type="story">
+        <i class="fas fa-plus"></i> Add Story Move
+      </button>
+    </div>
+    <div class="moves-list">
+      {{#each moves.story}}
+      <div class="item move" data-item-id="{{_id}}">
+        <div class="move-header">
+          <h4 class="move-name">{{name}}</h4>
+          <div class="move-controls">
+            <button type="button" class="item-edit" title="Edit Move">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button type="button" class="item-delete" title="Delete Move">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
         </div>
-        {{/if}}
+        <div class="move-stat">
+          <strong>{{capitalize system.stat}}</strong> Roll{{#if system.modifier}} {{system.modifier}}{{/if}}
+        </div>
+        <div class="move-description">
+          {{system.description}}
+        </div>
+        <button type="button" class="move-roll rollable" data-roll-type="item">
+          <i class="fas fa-dice-d20"></i> Roll Move
+        </button>
       </div>
       {{/each}}
     </div>
