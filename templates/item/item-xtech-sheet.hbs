@@ -1,0 +1,59 @@
+<form class="{{cssClass}}" autocomplete="off">
+  <header class="sheet-header">
+    <img src="{{item.img}}" data-edit="img" title="{{item.name}}" height="64" width="64"/>
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="X-Tech Name"/></h1>
+    </div>
+  </header>
+
+  <nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="description">Description</a>
+    <a class="item" data-tab="details">Details</a>
+  </nav>
+
+  <section class="sheet-body">
+    
+    <div class="tab" data-group="primary" data-tab="description">
+      <div class="form-group">
+        <label>Description:</label>
+        {{editor content=system.description target="system.description" button=true owner=owner editable=editable}}
+      </div>
+    </div>
+
+    <div class="tab" data-group="primary" data-tab="details">
+      
+      <div class="form-group">
+        <label>Base Type:</label>
+        <select name="system.baseType">
+          <option value="gear" {{#if (eq system.baseType 'gear')}}selected{{/if}}>Gear</option>
+          <option value="vehicle" {{#if (eq system.baseType 'vehicle')}}selected{{/if}}>Vehicle</option>
+          <option value="thang" {{#if (eq system.baseType 'thang')}}selected{{/if}}>Thang</option>
+        </select>
+        <small>What type of item this X-Tech is based on</small>
+      </div>
+
+      <div class="form-group">
+        <label>Prototype:</label>
+        <input name="system.prototype" type="checkbox" {{#if system.prototype}}checked{{/if}}/>
+        <small>Is this a one-of-a-kind prototype?</small>
+      </div>
+
+      <div class="form-group">
+        <label>Modifications:</label>
+        <input name="system.modifications" type="text" value="{{join system.modifications ', '}}" placeholder="laser sight, voice activation, AI assistant"/>
+        <small>Comma-separated list of modifications</small>
+      </div>
+
+      <div class="form-group">
+        <label>Special Rules:</label>
+        <textarea name="system.specialRules" rows="4" placeholder="How this X-Tech breaks the normal rules...">{{system.specialRules}}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Notes:</label>
+        <textarea name="system.notes" rows="4" placeholder="Additional notes about this X-Tech...">{{system.notes}}</textarea>
+      </div>
+
+    </div>
+  </section>
+</form>
