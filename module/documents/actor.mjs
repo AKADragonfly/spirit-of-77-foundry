@@ -85,28 +85,13 @@ export class Spirit77Actor extends Actor {
     // Apply active scar penalties
     for (const [key, scar] of Object.entries(systemData.scars || {})) {
       if (scar.active) {
-        // Map scar to stat (might, hustle, brains, smooth, soul)
-        const statKey = this._getScarStat(key);
+        const statKey = scar.stat; // Use the stat directly from scar definition
         const stat = systemData.stats[statKey];
         if (stat) {
           stat.scarPenalty = -1;
         }
       }
     }
-  }
-
-  /**
-   * Map scar types to their corresponding stats
-   */
-  _getScarStat(scarKey) {
-    const scarToStat = {
-      'brokeDown': 'might',
-      'outOfGas': 'hustle', 
-      'spaced': 'brains',
-      'uncool': 'smooth',
-      'uptight': 'soul'
-    };
-    return scarToStat[scarKey] || scarKey;
   }
 
   /**
@@ -160,22 +145,23 @@ export class Spirit77Actor extends Actor {
   }
 
   /**
-   * Roll a stat check
+   * Roll a stat check - SIMPLIFIED VERSION
    */
   async rollStat(statKey, options = {}) {
     const stat = this.system.stats[statKey];
     if (!stat) return;
 
-    const statValue = this.getStatValue(statKey);
-    const tempModifier = this.system.resources.modifiers.temporary || 0;
-    const somethingExtra = this.system.resources.modifiers.somethingExtra || false;
+    // Get values directly without complex roll data
+    const statValue = parseInt(stat.value || 0) + parseInt(stat.scarPenalty || 0);
+    const tempModifier = parseInt(this.system.resources?.modifiers?.temporary || 0);
+    const somethingExtra = this.system.resources?.modifiers?.somethingExtra || false;
     
-    let rollFormula = '2d6 + @stat';
+    let diceFormula = '2d6';
     let rollType = 'normal';
     
     // Check for "Something Less" penalty (4+ harm)
     if (this.system.harm.value >= 4) {
-      rollFormula = '3d6kl2 + @stat'; // Roll 3 dice, keep lowest 2
+      diceFormula = '3d6kl2'; // Roll 3 dice, keep lowest 2
       rollType = 'somethingLess';
     }
     
@@ -183,25 +169,22 @@ export class Spirit77Actor extends Actor {
     if (somethingExtra) {
       if (this.system.harm.value >= 4) {
         // Something Extra and Something Less cancel out
-        rollFormula = '2d6 + @stat';
+        diceFormula = '2d6';
         rollType = 'cancelOut';
       } else {
-        rollFormula = '3d6kh2 + @stat'; // Roll 3 dice, keep highest 2
+        diceFormula = '3d6kh2'; // Roll 3 dice, keep highest 2
         rollType = 'somethingExtra';
       }
     }
     
-    const rollData = { 
-      stat: statValue,
-      temp: tempModifier
-    };
+    // Build the complete formula with static values
+    let totalModifier = statValue + tempModifier;
+    let rollFormula = `${diceFormula} + ${totalModifier}`;
     
-    if (tempModifier !== 0) {
-      rollFormula += ' + @temp';
-    }
+    console.log('Roll formula:', rollFormula); // Debug log
 
-    const roll = new Roll(rollFormula, rollData);
-    await roll.evaluateSync(); // FIXED: Updated from deprecated async evaluate
+    const roll = new Roll(rollFormula);
+    await roll.evaluateSync();
 
     // Determine result type
     let resultType = 'failure';
@@ -236,11 +219,9 @@ export class Spirit77Actor extends Actor {
     
     if (rollType === 'somethingExtra') {
       const kept = roll.dice[0]?.results?.filter(r => r.active)?.map(r => r.result) || [];
-      const dropped = roll.dice[0]?.results?.filter(r => !r.active)?.map(r => r.result) || [];
       diceBreakdown = `Rolled: [${diceResults.join(', ')}] → Kept highest: [${kept.join(', ')}]`;
     } else if (rollType === 'somethingLess') {
       const kept = roll.dice[0]?.results?.filter(r => r.active)?.map(r => r.result) || [];
-      const dropped = roll.dice[0]?.results?.filter(r => !r.active)?.map(r => r.result) || [];
       diceBreakdown = `Rolled: [${diceResults.join(', ')}] → Kept lowest: [${kept.join(', ')}]`;
     } else {
       diceBreakdown = `Rolled: [${diceResults.join(', ')}]`;
