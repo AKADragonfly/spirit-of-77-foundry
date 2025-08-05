@@ -41,32 +41,32 @@
           }
         },
         "scars": {
-          "broken": {
+          "brokeDown": {
             "name": "Broke Down",
             "stat": "might",
             "active": false,
             "description": "Permanent injury affecting strength"
           },
-          "gimped": {
-            "name": "Gimped Up",
+          "outOfGas": {
+            "name": "Out of Gas",
             "stat": "hustle",
             "active": false,
             "description": "Permanent injury affecting mobility"
           },
-          "ugly": {
-            "name": "Hard to Look At",
+          "uncool": {
+            "name": "Uncool",
             "stat": "smooth", 
             "active": false,
             "description": "Permanent disfigurement affecting charisma"
           },
-          "punchy": {
-            "name": "Punch-drunk",
+          "spaced": {
+            "name": "Spaced",
             "stat": "brains",
             "active": false,
             "description": "Permanent brain injury affecting intelligence"
           },
-          "whitebread": {
-            "name": "Whitebread",
+          "uptight": {
+            "name": "Uptight",
             "stat": "soul",
             "active": false, 
             "description": "Permanent trauma affecting spirit"
@@ -134,63 +134,73 @@
     },
     "move": {
       "templates": ["base"],
-      "moveType": "basic",
-      "stat": "might",
-      "rollFormula": "2d6",
-      "modifier": "",
-      "success": {
-        "value": 10,
-        "text": ""
-      },
-      "partial": {
-        "value": 7,
-        "text": ""
-      },
-      "failure": {
-        "value": 6,  
-        "text": ""
+      "system": {
+        "moveType": "basic",
+        "stat": "might",
+        "rollFormula": "2d6",
+        "modifier": "",
+        "modifierDescription": "",
+        "success": {
+          "value": 10,
+          "text": ""
+        },
+        "partial": {
+          "value": 7,
+          "text": ""
+        },
+        "failure": {
+          "text": ""
+        }
       }
     },
     "gear": {
       "templates": ["base"],
-      "quantity": 1,
-      "harm": 0,
-      "armor": 0,
-      "range": "close",
-      "traits": [],
-      "stock": 0,
-      "cost": "",
-      "notes": ""
+      "system": {
+        "quantity": 1,
+        "harm": 0,
+        "armor": 0,
+        "range": "close",
+        "traits": [],
+        "stock": 0,
+        "cost": "",
+        "notes": ""
+      }
     },
     "thang": {
       "templates": ["base"],
-      "thangType": "aptitude",
-      "permanent": true,
-      "mechanical": false,
-      "rollStat": "smooth",
-      "rollBonus": 0,
-      "moveText": "",
-      "notes": ""
+      "system": {
+        "thangType": "aptitude",
+        "permanent": true,
+        "mechanical": false,
+        "rollStat": "smooth",
+        "rollBonus": 0,
+        "moveText": "",
+        "notes": ""
+      }
     },
     "vehicle": {
       "templates": ["base"],
-      "power": 1,
-      "looks": 0,
-      "armor": 0,
-      "traits": [],
-      "vehicleType": "sedan",
-      "make": "",
-      "model": "",
-      "year": "",
-      "notes": ""
+      "system": {
+        "power": 1,
+        "looks": 0,
+        "armor": 0,
+        "traits": [],
+        "vehicleType": "sedan",
+        "make": "",
+        "model": "",
+        "year": "",
+        "notes": ""
+      }
     },
     "xtech": {
       "templates": ["base"],
-      "baseType": "gear",
-      "modifications": [],
-      "prototype": true,
-      "specialRules": "",
-      "notes": ""
+      "system": {
+        "baseType": "gear",
+        "modifications": [],
+        "prototype": true,
+        "specialRules": "",
+        "notes": ""
+      }
     }
   }
 }
