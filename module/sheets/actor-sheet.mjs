@@ -13,7 +13,7 @@ export class Spirit77ActorSheet extends ActorSheet {
 
   /** @override */
   static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
+    return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ["spirit77", "sheet", "actor"],
       template: "systems/spirit-of-77/templates/actor/actor-sheet.hbs",
       width: 720,
@@ -212,7 +212,7 @@ export class Spirit77ActorSheet extends ActorSheet {
     // Get the type of item to create.
     const type = header.dataset.type;
     // Grab any data associated with this control.
-    const data = duplicate(header.dataset);
+    const data = foundry.utils.duplicate(header.dataset);
     // Initialize a default name.
     const name = `New ${type.capitalize()}`;
     // Prepare the item object.
