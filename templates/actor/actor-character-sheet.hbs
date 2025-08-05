@@ -2,12 +2,9 @@
 
   {{!-- Minimal Header - Just Character Name --}}
   <header class="sheet-header compact-header">
-    <div class="character-identity">
-      <img class="profile-img-small" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="48" width="48"/>
-      <h1 class="character-name">
-        <input name="name" type="text" value="{{actor.name}}" placeholder="Character Name"/>
-      </h1>
-    </div>
+    <h1 class="character-name-only">
+      <input name="name" type="text" value="{{actor.name}}" placeholder="Character Name"/>
+    </h1>
   </header>
 
   {{!-- Sheet Tab Navigation --}}
