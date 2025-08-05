@@ -185,16 +185,16 @@
                 <label class="stat-label">{{stat.label}}</label>
                 <div class="stat-controls">
                   <input class="stat-value" name="system.stats.{{key}}.value" type="number" value="{{stat.value}}" min="-3" max="3"/>
-                  {{#if (lookup ../system.scars key)}}
-                  <button type="button" class="scar-toggle {{#if (lookup ../system.scars key).active}}active{{/if}}" data-scar="{{key}}" title="{{(lookup ../system.scars key).name}}">
-                    <i class="fas fa-{{#if (lookup ../system.scars key).active}}check-{{/if}}square"></i>
+                  {{#with (lookup ../system.scars key)}}
+                  <button type="button" class="scar-toggle {{#if active}}active{{/if}}" data-scar="{{../key}}" title="{{name}}">
+                    <i class="fas fa-{{#if active}}check-{{/if}}square"></i>
                   </button>
-                  {{/if}}
+                  {{/with}}
                 </div>
               </div>
-              {{#if (lookup ../system.scars key)}}
-              <div class="scar-label">{{(lookup ../system.scars key).name}}</div>
-              {{/if}}
+              {{#with (lookup ../system.scars key)}}
+              <div class="scar-label">{{name}}</div>
+              {{/with}}
               <div class="stat-effective">
                 Effective: {{stat.effectiveValue}}
               </div>
