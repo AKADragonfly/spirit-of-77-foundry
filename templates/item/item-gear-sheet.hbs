@@ -1,0 +1,75 @@
+<form class="{{cssClass}}" autocomplete="off">
+  <header class="sheet-header">
+    <img src="{{item.img}}" data-edit="img" title="{{item.name}}" height="64" width="64"/>
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Gear Name"/></h1>
+    </div>
+  </header>
+
+  <nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="description">Description</a>
+    <a class="item" data-tab="details">Details</a>
+  </nav>
+
+  <section class="sheet-body">
+    
+    <div class="tab" data-group="primary" data-tab="description">
+      <div class="form-group">
+        <label>Description:</label>
+        {{editor content=system.description target="system.description" button=true owner=owner editable=editable}}
+      </div>
+    </div>
+
+    <div class="tab" data-group="primary" data-tab="details">
+      
+      <div class="form-group">
+        <label>Quantity:</label>
+        <input name="system.quantity" type="number" value="{{system.quantity}}" min="0"/>
+      </div>
+
+      <div class="form-group">
+        <label>Harm:</label>
+        <input name="system.harm" type="number" value="{{system.harm}}" min="0" max="10"/>
+        <small>How much harm this weapon deals</small>
+      </div>
+
+      <div class="form-group">
+        <label>Armor:</label>
+        <input name="system.armor" type="number" value="{{system.armor}}" min="0" max="10"/>
+        <small>How much armor this provides</small>
+      </div>
+
+      <div class="form-group">
+        <label>Range:</label>
+        <select name="system.range">
+          {{#each rangeOptions}}
+          <option value="{{key}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+          {{/each}}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Traits:</label>
+        <input name="system.traits" type="text" value="{{join system.traits ', '}}" placeholder="loud, messy, precise"/>
+        <small>Comma-separated list of weapon/gear traits</small>
+      </div>
+
+      <div class="form-group">
+        <label>Stock:</label>
+        <input name="system.stock" type="number" value="{{system.stock}}" min="0"/>
+        <small>For consumable items (ammo, etc.)</small>
+      </div>
+
+      <div class="form-group">
+        <label>Cost:</label>
+        <input name="system.cost" type="text" value="{{system.cost}}" placeholder="$50, 2 cash"/>
+      </div>
+
+      <div class="form-group">
+        <label>Notes:</label>
+        <textarea name="system.notes" rows="4" placeholder="Additional notes about this gear...">{{system.notes}}</textarea>
+      </div>
+
+    </div>
+  </section>
+</form>
