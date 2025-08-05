@@ -18,7 +18,7 @@ export class Spirit77ActorSheet extends ActorSheet {
       template: "systems/spirit-of-77/templates/actor/actor-sheet.hbs",
       width: 720,
       height: 800,
-      tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "character" }]
+      tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "rapsheet" }]
     });
   }
 
@@ -41,6 +41,14 @@ export class Spirit77ActorSheet extends ActorSheet {
     // Add the actor's data to context.data for easier access, as well as flags.
     context.system = actorData.system;
     context.flags = actorData.flags;
+
+    // Register capitalize helper if not already registered
+    if (!Handlebars.helpers.capitalize) {
+      Handlebars.registerHelper('capitalize', function(str) {
+        if (typeof str !== 'string') return '';
+        return str.charAt(0).toUpperCase() + str.slice(1);
+      });
+    }
 
     // Prepare character data and items.
     if (actorData.type == 'character') {
@@ -211,18 +219,30 @@ export class Spirit77ActorSheet extends ActorSheet {
     const header = event.currentTarget;
     // Get the type of item to create.
     const type = header.dataset.type;
+    // Get move type if specified
+    const moveType = header.dataset.moveType || 'basic';
+    
     // Grab any data associated with this control.
     const data = foundry.utils.duplicate(header.dataset);
+    
     // Initialize a default name.
-    const name = `New ${type.capitalize()}`;
+    const name = `New ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+    
     // Prepare the item object.
     const itemData = {
       name: name,
       type: type,
       system: data
     };
+    
+    // Set move type for moves
+    if (type === 'move') {
+      itemData.system.moveType = moveType;
+    }
+    
     // Remove the type from the dataset since it's in the itemData.type prop.
     delete itemData.system["type"];
+    delete itemData.system["moveType"];
 
     // Finally, create the item!
     return await Item.create(itemData, {parent: this.actor});
