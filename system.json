@@ -1,6 +1,6 @@
 {
-  "id": "spirit-of-77-temp",
-  "title": "Spirit of '77 (Temp)",
+  "id": "spirit-of-77",
+  "title": "Spirit of '77",
   "description": "A custom Foundry VTT system for the Spirit of '77 RPG, built on PbtA mechanics with 1970s styling and complete character sheet control. Based on the PbtA system by asacolips-projects and inspired by the Monsters of the Week implementation.",
   "version": "1.0.0",
   "compatibility": {
@@ -56,6 +56,7 @@
   }
 
 }
+
 
 
 
