@@ -111,22 +111,39 @@ export class Spirit77Item extends Item {
         return this.rollMove();
       }
 
-      // For other items, do a basic roll
-      const rollData = this.getRollData();
-      const roll = new Roll(this.system.rollFormula, rollData);
-      await roll.evaluateSync(); // FIXED: Updated from deprecated async evaluate
+      // For other items, do a basic roll with fallback system
+      try {
+        const roll = new Roll(this.system.rollFormula);
+        
+        // Try the old async method first
+        try {
+          await roll.evaluate({ async: true });
+        } catch (asyncError) {
+          console.warn('Item async roll failed, trying sync:', asyncError);
+          roll.evaluateSync();
+        }
 
-      roll.toMessage({
-        speaker: speaker,
-        rollMode: rollMode,
-        flavor: label,
-      });
-      return roll;
+        roll.toMessage({
+          speaker: speaker,
+          rollMode: rollMode,
+          flavor: label,
+        });
+        return roll;
+        
+      } catch (error) {
+        console.error('Item roll failed completely:', error);
+        ChatMessage.create({
+          speaker: speaker,
+          rollMode: rollMode,
+          flavor: label,
+          content: `${item.system.description ?? ''} (Roll failed due to Foundry issue)`
+        });
+      }
     }
   }
 
   /**
-   * Roll a move
+   * Roll a move - USING SAME FALLBACK SYSTEM AS ACTOR
    */
   async rollMove() {
     if (this.type !== 'move') return;
@@ -136,16 +153,16 @@ export class Spirit77Item extends Item {
 
     const statKey = this.system.stat;
     const statValue = actor.getStatValue(statKey);
-    const tempModifier = actor.system.resources.modifiers.temporary || 0;
+    const tempModifier = parseInt(actor.system.resources?.modifiers?.temporary || 0);
     const moveModifier = this.system.modifier ? parseInt(this.system.modifier) || 0 : 0;
-    const somethingExtra = actor.system.resources.modifiers.somethingExtra || false;
+    const somethingExtra = actor.system.resources?.modifiers?.somethingExtra || false;
     
-    let rollFormula = '2d6 + @stat';
+    let diceFormula = '2d6';
     let rollType = 'normal';
     
     // Check for "Something Less" penalty (4+ harm)
     if (actor.system.harm.value >= 4) {
-      rollFormula = '3d6kl2 + @stat'; // Roll 3 dice, keep lowest 2
+      diceFormula = '3d6kl2'; // Roll 3 dice, keep lowest 2
       rollType = 'somethingLess';
     }
     
@@ -153,57 +170,87 @@ export class Spirit77Item extends Item {
     if (somethingExtra) {
       if (actor.system.harm.value >= 4) {
         // Something Extra and Something Less cancel out
-        rollFormula = '2d6 + @stat';
+        diceFormula = '2d6';
         rollType = 'cancelOut';
       } else {
-        rollFormula = '3d6kh2 + @stat'; // Roll 3 dice, keep highest 2
+        diceFormula = '3d6kh2'; // Roll 3 dice, keep highest 2
         rollType = 'somethingExtra';
       }
     }
     
-    const rollData = { 
-      stat: statValue,
-      temp: tempModifier,
-      move: moveModifier
-    };
+    // Build the complete formula with static values
+    let totalModifier = statValue + tempModifier + moveModifier;
+    let rollFormula = `${diceFormula} + ${totalModifier}`;
     
-    if (tempModifier !== 0) {
-      rollFormula += ' + @temp';
+    console.log('Move roll formula:', rollFormula);
+
+    try {
+      const roll = new Roll(rollFormula);
+      
+      // Try the old async method first
+      try {
+        await roll.evaluate({ async: true });
+      } catch (asyncError) {
+        console.warn('Move async roll failed, trying sync:', asyncError);
+        roll.evaluateSync();
+      }
+
+      // Determine result type
+      let resultType = 'failure';
+      let resultText = this.system.success?.text || '';
+      
+      if (roll.total >= (this.system.success?.value || 10)) {
+        resultType = 'success';
+        resultText = this.system.success?.text || '';
+      } else if (roll.total >= (this.system.partial?.value || 7)) {
+        resultType = 'partial';
+        resultText = this.system.partial?.text || '';
+      } else {
+        resultText = this.system.failure?.text || '';
+      }
+
+      const messageData = {
+        speaker: ChatMessage.getSpeaker({ actor: actor }),
+        roll: roll,
+        content: await this._formatMoveRollMessage(roll, resultType, resultText, rollType, statValue, tempModifier, moveModifier),
+        sound: CONFIG.sounds.dice
+      };
+
+      // Reset temporary modifiers after use
+      await actor.update({
+        'system.resources.modifiers.temporary': 0,
+        'system.resources.modifiers.somethingExtra': false
+      });
+
+      return ChatMessage.create(messageData);
+      
+    } catch (error) {
+      console.error('Move roll failed completely:', error);
+      
+      // Manual fallback - create a basic chat message
+      const manualRoll = Math.floor(Math.random() * 6) + 1 + Math.floor(Math.random() * 6) + 1 + totalModifier;
+      let resultType = 'failure';
+      if (manualRoll >= (this.system.success?.value || 10)) resultType = 'success';
+      else if (manualRoll >= (this.system.partial?.value || 7)) resultType = 'partial';
+      
+      const stat = actor.system.stats[statKey];
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: actor }),
+        content: `
+          <div class="spirit77-move-roll">
+            <div class="roll-header">
+              <strong>${actor.name}</strong> uses <em>${this.name}</em> (Manual Roll - Foundry Issue)
+            </div>
+            <div class="roll-stat">
+              Rolling ${stat.label} (${statValue})
+            </div>
+            <div class="roll-result ${resultType}">
+              <strong>${manualRoll} - ${resultType.charAt(0).toUpperCase() + resultType.slice(1)}</strong>
+            </div>
+          </div>
+        `
+      });
     }
-    
-    if (moveModifier !== 0) {
-      rollFormula += ' + @move';
-    }
-
-    const roll = new Roll(rollFormula, rollData);
-    await roll.evaluateSync(); // FIXED: Updated from deprecated async evaluate
-
-    // Determine result type
-    let resultType = 'failure';
-    let resultText = this.system.failure?.text || '';
-    
-    if (roll.total >= (this.system.success?.value || 10)) {
-      resultType = 'success';
-      resultText = this.system.success?.text || '';
-    } else if (roll.total >= (this.system.partial?.value || 7)) {
-      resultType = 'partial';
-      resultText = this.system.partial?.text || '';
-    }
-
-    const messageData = {
-      speaker: ChatMessage.getSpeaker({ actor: actor }),
-      roll: roll,
-      content: await this._formatMoveRollMessage(roll, resultType, resultText, rollType, statValue, tempModifier, moveModifier),
-      sound: CONFIG.sounds.dice
-    };
-
-    // Reset temporary modifiers after use
-    await actor.update({
-      'system.resources.modifiers.temporary': 0,
-      'system.resources.modifiers.somethingExtra': false
-    });
-
-    return ChatMessage.create(messageData);
   }
 
   /**
@@ -220,11 +267,9 @@ export class Spirit77Item extends Item {
     
     if (rollType === 'somethingExtra') {
       const kept = roll.dice[0]?.results?.filter(r => r.active)?.map(r => r.result) || [];
-      const dropped = roll.dice[0]?.results?.filter(r => !r.active)?.map(r => r.result) || [];
       diceBreakdown = `Rolled: [${diceResults.join(', ')}] → Kept highest: [${kept.join(', ')}]`;
     } else if (rollType === 'somethingLess') {
       const kept = roll.dice[0]?.results?.filter(r => r.active)?.map(r => r.result) || [];
-      const dropped = roll.dice[0]?.results?.filter(r => !r.active)?.map(r => r.result) || [];
       diceBreakdown = `Rolled: [${diceResults.join(', ')}] → Kept lowest: [${kept.join(', ')}]`;
     } else {
       diceBreakdown = `Rolled: [${diceResults.join(', ')}]`;
