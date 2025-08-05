@@ -1,135 +1,19 @@
 <form class="{{cssClass}} {{actor.type}} flexcol" autocomplete="off">
 
-  {{!-- Persistent Header - Always Visible --}}
-  <header class="sheet-header persistent-header">
-    <div class="rap-sheet-header">
-      <div class="header-stamp">
-        <div class="police-dept">POLICE DEPARTMENT</div>
-        <div class="arrest-record">ARREST RECORD</div>
-        <div class="case-number">Case #: {{actor._id}}</div>
-      </div>
-      
-      <div class="mugshot-area">
-        <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="100" width="100"/>
-        <div class="fingerprint-box">
-          <div class="fingerprint-label">PRINTS</div>
-          <div class="fingerprint-grid">
-            <div class="print"></div>
-            <div class="print"></div>
-            <div class="print"></div>
-            <div class="print"></div>
-            <div class="print"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="personal-info-grid">
-      <div class="info-row">
-        <div class="info-field">
-          <label>LAST NAME:</label>
-          <input name="system.details.lastName" type="text" value="{{system.details.lastName}}" placeholder="Surname"/>
-        </div>
-        <div class="info-field">
-          <label>FIRST NAME:</label>
-          <input name="system.details.firstName" type="text" value="{{system.details.firstName}}" placeholder="Given Name"/>
-        </div>
-        <div class="info-field small">
-          <label>M.I.:</label>
-          <input name="system.details.middleInitial" type="text" value="{{system.details.middleInitial}}" placeholder="X" maxlength="1"/>
-        </div>
-      </div>
-      
-      <div class="info-row">
-        <div class="info-field">
-          <label>KNOWN ALIASES:</label>
-          <input name="system.details.aliases" type="text" value="{{system.details.aliases}}" placeholder="Street names, nicknames"/>
-        </div>
-      </div>
-      
-      <div class="info-row">
-        <div class="info-field small">
-          <label>GENDER:</label>
-          <input name="system.details.gender" type="text" value="{{system.details.gender}}" placeholder="M/F"/>
-        </div>
-        <div class="info-field">
-          <label>DATE OF BIRTH:</label>
-          <input name="system.details.dateOfBirth" type="text" value="{{system.details.dateOfBirth}}" placeholder="MM/DD/YYYY"/>
-        </div>
-        <div class="info-field">
-          <label>PLACE OF BIRTH:</label>
-          <input name="system.details.placeOfBirth" type="text" value="{{system.details.placeOfBirth}}" placeholder="City, State"/>
-        </div>
-      </div>
-      
-      <div class="info-row">
-        <div class="info-field">
-          <label>MARITAL STATUS:</label>
-          <input name="system.details.maritalStatus" type="text" value="{{system.details.maritalStatus}}" placeholder="Single/Married/Divorced"/>
-        </div>
-        <div class="info-field">
-          <label>SOCIAL SECURITY NUMBER:</label>
-          <input name="system.details.socialSecurity" type="text" value="{{system.details.socialSecurity}}" placeholder="XXX-XX-XXXX"/>
-        </div>
-      </div>
-      
-      <div class="info-row">
-        <div class="info-field small">
-          <label>HEIGHT:</label>
-          <input name="system.details.height" type="text" value="{{system.details.height}}" placeholder="5'10&quot;"/>
-        </div>
-        <div class="info-field small">
-          <label>WEIGHT:</label>
-          <input name="system.details.weight" type="text" value="{{system.details.weight}}" placeholder="175 lbs"/>
-        </div>
-        <div class="info-field small">
-          <label>EYES:</label>
-          <input name="system.details.eyes" type="text" value="{{system.details.eyes}}" placeholder="Brown"/>
-        </div>
-        <div class="info-field small">
-          <label>HAIR:</label>
-          <input name="system.details.hair" type="text" value="{{system.details.hair}}" placeholder="Black"/>
-        </div>
-      </div>
-      
-      <div class="info-row">
-        <div class="info-field full-width">
-          <label>DISTINGUISHING CHARACTERISTICS:</label>
-          <input name="system.details.distinguishing" type="text" value="{{system.details.distinguishing}}" placeholder="Scars, tattoos, marks"/>
-        </div>
-      </div>
-      
-      <div class="info-row">
-        <div class="info-field">
-          <label>ADDRESS:</label>
-          <input name="system.details.address" type="text" value="{{system.details.address}}" placeholder="Street Address"/>
-        </div>
-        <div class="info-field">
-          <label>CITY:</label>
-          <input name="system.details.city" type="text" value="{{system.details.city}}" placeholder="City"/>
-        </div>
-        <div class="info-field small">
-          <label>STATE:</label>
-          <input name="system.details.state" type="text" value="{{system.details.state}}" placeholder="CA"/>
-        </div>
-        <div class="info-field small">
-          <label>ZIP:</label>
-          <input name="system.details.zipCode" type="text" value="{{system.details.zipCode}}" placeholder="90210"/>
-        </div>
-      </div>
-      
-      <div class="info-row">
-        <div class="info-field">
-          <label>TELEPHONE:</label>
-          <input name="system.details.telephone" type="text" value="{{system.details.telephone}}" placeholder="(555) 123-4567"/>
-        </div>
-      </div>
+  {{!-- Minimal Header - Just Character Name --}}
+  <header class="sheet-header compact-header">
+    <div class="character-identity">
+      <img class="profile-img-small" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="48" width="48"/>
+      <h1 class="character-name">
+        <input name="name" type="text" value="{{actor.name}}" placeholder="Character Name"/>
+      </h1>
     </div>
   </header>
 
   {{!-- Sheet Tab Navigation --}}
   <nav class="sheet-tabs tabs" data-group="primary">
-    <a class="item" data-tab="character">Character</a>
+    <a class="item" data-tab="rapsheet">Rap Sheet</a>
+    <a class="item" data-tab="vitals">Vitals</a>
     <a class="item" data-tab="moves">Moves</a>
     <a class="item" data-tab="gear">Gear & Thangs</a>
     <a class="item" data-tab="notes">Notes & Hooks</a>
@@ -138,11 +22,143 @@
   {{!-- Sheet Body --}}
   <section class="sheet-body">
     
-    {{!-- Character Tab --}}
-    <div class="tab character" data-group="primary" data-tab="character">
-      <div class="character-main">
+    {{!-- Rap Sheet Tab - Police Booking Information --}}
+    <div class="tab rapsheet" data-group="primary" data-tab="rapsheet">
+      <div class="rap-sheet-content">
         
-        {{!-- Character Fields --}}
+        {{!-- Police Department Header --}}
+        <div class="rap-sheet-header">
+          <div class="header-stamp">
+            <div class="police-dept">POLICE DEPARTMENT</div>
+            <div class="arrest-record">ARREST RECORD</div>
+            <div class="case-number">Case #: {{actor._id}}</div>
+          </div>
+          
+          <div class="mugshot-area">
+            <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="120" width="120"/>
+            <div class="fingerprint-box">
+              <div class="fingerprint-label">PRINTS</div>
+              <div class="fingerprint-grid">
+                <div class="print"></div>
+                <div class="print"></div>
+                <div class="print"></div>
+                <div class="print"></div>
+                <div class="print"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {{!-- Personal Information Grid --}}
+        <div class="personal-info-grid">
+          <div class="info-row">
+            <div class="info-field">
+              <label>LAST NAME:</label>
+              <input name="system.details.lastName" type="text" value="{{system.details.lastName}}" placeholder="Surname"/>
+            </div>
+            <div class="info-field">
+              <label>FIRST NAME:</label>
+              <input name="system.details.firstName" type="text" value="{{system.details.firstName}}" placeholder="Given Name"/>
+            </div>
+            <div class="info-field small">
+              <label>M.I.:</label>
+              <input name="system.details.middleInitial" type="text" value="{{system.details.middleInitial}}" placeholder="X" maxlength="1"/>
+            </div>
+          </div>
+          
+          <div class="info-row">
+            <div class="info-field">
+              <label>KNOWN ALIASES:</label>
+              <input name="system.details.aliases" type="text" value="{{system.details.aliases}}" placeholder="Street names, nicknames"/>
+            </div>
+          </div>
+          
+          <div class="info-row">
+            <div class="info-field small">
+              <label>GENDER:</label>
+              <input name="system.details.gender" type="text" value="{{system.details.gender}}" placeholder="M/F"/>
+            </div>
+            <div class="info-field">
+              <label>DATE OF BIRTH:</label>
+              <input name="system.details.dateOfBirth" type="text" value="{{system.details.dateOfBirth}}" placeholder="MM/DD/YYYY"/>
+            </div>
+            <div class="info-field">
+              <label>PLACE OF BIRTH:</label>
+              <input name="system.details.placeOfBirth" type="text" value="{{system.details.placeOfBirth}}" placeholder="City, State"/>
+            </div>
+          </div>
+          
+          <div class="info-row">
+            <div class="info-field">
+              <label>MARITAL STATUS:</label>
+              <input name="system.details.maritalStatus" type="text" value="{{system.details.maritalStatus}}" placeholder="Single/Married/Divorced"/>
+            </div>
+            <div class="info-field">
+              <label>SOCIAL SECURITY NUMBER:</label>
+              <input name="system.details.socialSecurity" type="text" value="{{system.details.socialSecurity}}" placeholder="XXX-XX-XXXX"/>
+            </div>
+          </div>
+          
+          <div class="info-row">
+            <div class="info-field small">
+              <label>HEIGHT:</label>
+              <input name="system.details.height" type="text" value="{{system.details.height}}" placeholder="5'10&quot;"/>
+            </div>
+            <div class="info-field small">
+              <label>WEIGHT:</label>
+              <input name="system.details.weight" type="text" value="{{system.details.weight}}" placeholder="175 lbs"/>
+            </div>
+            <div class="info-field small">
+              <label>EYES:</label>
+              <input name="system.details.eyes" type="text" value="{{system.details.eyes}}" placeholder="Brown"/>
+            </div>
+            <div class="info-field small">
+              <label>HAIR:</label>
+              <input name="system.details.hair" type="text" value="{{system.details.hair}}" placeholder="Black"/>
+            </div>
+          </div>
+          
+          <div class="info-row">
+            <div class="info-field full-width">
+              <label>DISTINGUISHING CHARACTERISTICS:</label>
+              <input name="system.details.distinguishing" type="text" value="{{system.details.distinguishing}}" placeholder="Scars, tattoos, marks"/>
+            </div>
+          </div>
+          
+          <div class="info-row">
+            <div class="info-field">
+              <label>ADDRESS:</label>
+              <input name="system.details.address" type="text" value="{{system.details.address}}" placeholder="Street Address"/>
+            </div>
+            <div class="info-field">
+              <label>CITY:</label>
+              <input name="system.details.city" type="text" value="{{system.details.city}}" placeholder="City"/>
+            </div>
+            <div class="info-field small">
+              <label>STATE:</label>
+              <input name="system.details.state" type="text" value="{{system.details.state}}" placeholder="CA"/>
+            </div>
+            <div class="info-field small">
+              <label>ZIP:</label>
+              <input name="system.details.zipCode" type="text" value="{{system.details.zipCode}}" placeholder="90210"/>
+            </div>
+          </div>
+          
+          <div class="info-row">
+            <div class="info-field">
+              <label>TELEPHONE:</label>
+              <input name="system.details.telephone" type="text" value="{{system.details.telephone}}" placeholder="(555) 123-4567"/>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{!-- Vitals Tab - Stats, Harm, Character Details --}}
+    <div class="tab vitals" data-group="primary" data-tab="vitals">
+      <div class="vitals-main">
+        
+        {{!-- Character Core Info --}}
         <div class="character-fields">
           <div class="field-group">
             <div class="field">
@@ -291,4 +307,3 @@
 
   </section>
 </form>
-
