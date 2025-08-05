@@ -50,6 +50,20 @@ export class Spirit77ActorSheet extends ActorSheet {
       });
     }
 
+    // Register eq helper if not already registered
+    if (!Handlebars.helpers.eq) {
+      Handlebars.registerHelper('eq', function(a, b) {
+        return a === b;
+      });
+    }
+
+    // Register subtract helper if not already registered
+    if (!Handlebars.helpers.subtract) {
+      Handlebars.registerHelper('subtract', function(a, b) {
+        return a - b;
+      });
+    }
+
     // Prepare character data and items.
     if (actorData.type == 'character') {
       this._prepareItems(context);
@@ -222,27 +236,50 @@ export class Spirit77ActorSheet extends ActorSheet {
     // Get move type if specified
     const moveType = header.dataset.moveType || 'basic';
     
-    // Grab any data associated with this control.
-    const data = foundry.utils.duplicate(header.dataset);
-    
     // Initialize a default name.
     const name = `New ${type.charAt(0).toUpperCase() + type.slice(1)}`;
     
-    // Prepare the item object.
+    // Prepare the item object with proper defaults
     const itemData = {
       name: name,
       type: type,
-      system: data
+      system: {}
     };
     
-    // Set move type for moves
+    // Set type-specific defaults
     if (type === 'move') {
-      itemData.system.moveType = moveType;
+      itemData.system = {
+        moveType: moveType,
+        stat: 'might',
+        modifier: '',
+        modifierDescription: '',
+        description: '',
+        success: { value: 10, text: '' },
+        partial: { value: 7, text: '' },
+        failure: { text: '' }
+      };
+    } else if (type === 'gear') {
+      itemData.system = {
+        description: '',
+        quantity: 1,
+        weight: 0
+      };
+    } else if (type === 'thang') {
+      itemData.system = {
+        description: '',
+        thangType: 'personal'
+      };
+    } else if (type === 'vehicle') {
+      itemData.system = {
+        description: '',
+        vehicleType: 'car'
+      };
+    } else if (type === 'xtech') {
+      itemData.system = {
+        description: '',
+        xtechType: 'gadget'
+      };
     }
-    
-    // Remove the type from the dataset since it's in the itemData.type prop.
-    delete itemData.system["type"];
-    delete itemData.system["moveType"];
 
     // Finally, create the item!
     return await Item.create(itemData, {parent: this.actor});
