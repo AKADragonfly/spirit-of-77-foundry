@@ -20,13 +20,9 @@
     </div>
     
     <div class="tab" data-group="primary" data-tab="details">
-      <div class="form-group">
-        <label>Move Type:</label>
-        <select name="system.moveType">
-          <option value="basic" {{#eq system.moveType "basic"}}selected{{/eq}}>Basic Move</option>
-          <option value="role" {{#eq system.moveType "role"}}selected{{/eq}}>Role Move</option>
-          <option value="story" {{#eq system.moveType "story"}}selected{{/eq}}>Story Move</option>
-        </select>
+      {{!-- Move type is set by creation button, no need for dropdown --}}
+      <div class="form-group" style="display: none;">
+        <input name="system.moveType" type="hidden" value="{{system.moveType}}"/>
       </div>
       
       <div class="form-group">
