@@ -1,0 +1,73 @@
+<form class="{{cssClass}} {{actor.type}} flexcol" autocomplete="off">
+
+  {{!-- NPC Header --}}
+  <header class="sheet-header npc-header">
+    <div class="npc-identity">
+      <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="80" width="80"/>
+      <div class="npc-info">
+        <h1 class="charname">
+          <input name="name" type="text" value="{{actor.name}}" placeholder="NPC Name"/>
+        </h1>
+        <div class="npc-description">
+          <textarea name="system.details.description" rows="3" placeholder="Brief description of this NPC...">{{system.details.description}}</textarea>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  {{!-- NPC Body --}}
+  <section class="sheet-body npc-body">
+    
+    {{!-- Stats Section --}}
+    <div class="npc-stats">
+      <h3>Stats</h3>
+      <div class="stats-grid">
+        {{#each system.stats as |stat key|}}
+        <div class="stat-block">
+          <label class="stat-label">{{stat.label}}</label>
+          <input class="stat-value" name="system.stats.{{key}}.value" type="number" value="{{stat.value}}" min="-3" max="3"/>
+          <button type="button" class="stat-roll rollable" data-stat="{{key}}">
+            <i class="fas fa-dice-d20"></i>
+          </button>
+        </div>
+        {{/each}}
+      </div>
+    </div>
+
+    {{!-- Harm Section --}}
+    <div class="npc-harm">
+      <h3>Harm</h3>
+      <div class="harm-track">
+        <div class="harm-boxes">
+          {{#times system.harm.max}}
+          <div class="harm-box {{#if (lte @index ../system.harm.value)}}filled{{/if}}" data-harm="{{@index}}">
+            {{@index}}
+          </div>
+          {{/times}}
+        </div>
+        <div class="harm-controls">
+          <button type="button" class="harm-adjust" data-adjustment="-1">
+            <i class="fas fa-minus"></i> Heal
+          </button>
+          <span class="current-harm">{{system.harm.value}}/{{system.harm.max}}</span>
+          <button type="button" class="harm-adjust" data-adjustment="1">
+            <i class="fas fa-plus"></i> Harm
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {{!-- Notes Section --}}
+    <div class="npc-notes">
+      <h3>Notes</h3>
+      <textarea name="system.details.notes" rows="8" placeholder="Notes about this NPC - motivations, connections, secrets...">{{system.details.notes}}</textarea>
+    </div>
+
+    {{!-- Moves Section --}}
+    <div class="npc-moves">
+      <h3>Moves & Abilities</h3>
+      {{> "systems/spirit-of-77/templates/actor/parts/actor-moves.hbs"}}
+    </div>
+
+  </section>
+</form>
