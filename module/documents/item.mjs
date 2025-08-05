@@ -39,7 +39,14 @@ export class Spirit77Item extends Item {
     if (itemData.type !== 'move') return;
 
     const systemData = itemData.system;
-    // Add any move-specific calculations here
+    
+    // Ensure default values exist
+    systemData.success = systemData.success || { value: 10, text: '' };
+    systemData.partial = systemData.partial || { value: 7, text: '' };
+    systemData.failure = systemData.failure || { text: '' };
+    systemData.modifier = systemData.modifier || '';
+    systemData.stat = systemData.stat || 'might';
+    systemData.moveType = systemData.moveType || 'basic';
   }
 
   /**
@@ -107,7 +114,7 @@ export class Spirit77Item extends Item {
       // For other items, do a basic roll
       const rollData = this.getRollData();
       const roll = new Roll(this.system.rollFormula, rollData);
-      await roll.evaluate({ async: true });
+      await roll.evaluateSync(); // FIXED: Updated from deprecated async evaluate
 
       roll.toMessage({
         speaker: speaker,
@@ -134,10 +141,12 @@ export class Spirit77Item extends Item {
     const somethingExtra = actor.system.resources.modifiers.somethingExtra || false;
     
     let rollFormula = '2d6 + @stat';
+    let rollType = 'normal';
     
     // Check for "Something Less" penalty (4+ harm)
     if (actor.system.harm.value >= 4) {
       rollFormula = '3d6kl2 + @stat'; // Roll 3 dice, keep lowest 2
+      rollType = 'somethingLess';
     }
     
     // Check for "Something Extra" 
@@ -145,8 +154,10 @@ export class Spirit77Item extends Item {
       if (actor.system.harm.value >= 4) {
         // Something Extra and Something Less cancel out
         rollFormula = '2d6 + @stat';
+        rollType = 'cancelOut';
       } else {
         rollFormula = '3d6kh2 + @stat'; // Roll 3 dice, keep highest 2
+        rollType = 'somethingExtra';
       }
     }
     
@@ -165,7 +176,7 @@ export class Spirit77Item extends Item {
     }
 
     const roll = new Roll(rollFormula, rollData);
-    await roll.evaluate({ async: true });
+    await roll.evaluateSync(); // FIXED: Updated from deprecated async evaluate
 
     // Determine result type
     let resultType = 'failure';
@@ -182,7 +193,7 @@ export class Spirit77Item extends Item {
     const messageData = {
       speaker: ChatMessage.getSpeaker({ actor: actor }),
       roll: roll,
-      content: await this._formatMoveRollMessage(roll, resultType, resultText, tempModifier, moveModifier, somethingExtra),
+      content: await this._formatMoveRollMessage(roll, resultType, resultText, rollType, statValue, tempModifier, moveModifier),
       sound: CONFIG.sounds.dice
     };
 
@@ -196,29 +207,51 @@ export class Spirit77Item extends Item {
   }
 
   /**
-   * Format move roll result message
+   * Format move roll result message with dice breakdown
    */
-  async _formatMoveRollMessage(roll, resultType, resultText, tempModifier = 0, moveModifier = 0, somethingExtra = false) {
+  async _formatMoveRollMessage(roll, resultType, resultText, rollType, statValue, tempModifier = 0, moveModifier = 0) {
     const actor = this.actor;
     const statKey = this.system.stat;
     const stat = actor.system.stats[statKey];
     
+    // Get individual die results for breakdown
+    const diceResults = roll.dice[0]?.results?.map(r => r.result) || [];
+    let diceBreakdown = '';
+    
+    if (rollType === 'somethingExtra') {
+      const kept = roll.dice[0]?.results?.filter(r => r.active)?.map(r => r.result) || [];
+      const dropped = roll.dice[0]?.results?.filter(r => !r.active)?.map(r => r.result) || [];
+      diceBreakdown = `Rolled: [${diceResults.join(', ')}] → Kept highest: [${kept.join(', ')}]`;
+    } else if (rollType === 'somethingLess') {
+      const kept = roll.dice[0]?.results?.filter(r => r.active)?.map(r => r.result) || [];
+      const dropped = roll.dice[0]?.results?.filter(r => !r.active)?.map(r => r.result) || [];
+      diceBreakdown = `Rolled: [${diceResults.join(', ')}] → Kept lowest: [${kept.join(', ')}]`;
+    } else {
+      diceBreakdown = `Rolled: [${diceResults.join(', ')}]`;
+    }
+    
     let rollDescription = '';
-    if (actor.system.harm.value >= 4 && !somethingExtra) {
+    if (rollType === 'somethingLess') {
       rollDescription = ' (Something Less)';
-    } else if (somethingExtra && actor.system.harm.value < 4) {
+    } else if (rollType === 'somethingExtra') {
       rollDescription = ' (Something Extra)';
-    } else if (somethingExtra && actor.system.harm.value >= 4) {
+    } else if (rollType === 'cancelOut') {
       rollDescription = ' (Extra & Less cancel)';
     }
     
     let modifierText = '';
+    let modifierBreakdown = `${statValue} (${stat.label})`;
+    
     if (tempModifier !== 0) {
       modifierText += ` ${tempModifier > 0 ? '+' : ''}${tempModifier} (temp)`;
+      modifierBreakdown += ` + ${tempModifier} (temp)`;
     }
     if (moveModifier !== 0) {
       modifierText += ` ${moveModifier > 0 ? '+' : ''}${moveModifier} (move)`;
+      modifierBreakdown += ` + ${moveModifier} (move)`;
     }
+    
+    const totalBreakdown = `${diceBreakdown} + ${modifierBreakdown} = ${roll.total}`;
     
     return `
       <div class="spirit77-move-roll">
@@ -226,10 +259,13 @@ export class Spirit77Item extends Item {
           <strong>${actor.name}</strong> uses <em>${this.name}</em>
         </div>
         <div class="roll-stat">
-          Rolling ${stat.label} (${actor.getStatValue(statKey)})${rollDescription}${modifierText}
+          Rolling ${stat.label} (${statValue})${rollDescription}${modifierText}
         </div>
-        <div class="roll-result ${resultType}">
+        <div class="roll-result ${resultType}" title="${totalBreakdown}">
           <strong>${roll.total} - ${resultType.charAt(0).toUpperCase() + resultType.slice(1)}</strong>
+          <div class="roll-breakdown" style="font-size: 0.8em; color: #666; margin-top: 4px;">
+            ${totalBreakdown}
+          </div>
         </div>
         ${resultText ? `<div class="roll-description">${resultText}</div>` : ''}
       </div>
