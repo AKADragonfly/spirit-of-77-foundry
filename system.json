@@ -32,12 +32,12 @@
   "secondaryTokenAttribute": null,
   "initiative": "1d20",
   "socket": false,
-  "manifest": "https://github.com/AKADragonfly/spirit-of-77/releases/latest/download/system.json",
-  "download": "https://github.com/AKADragonfly/spirit-of-77/releases/latest/download/system.zip",
+  "manifest": "https://github.com/AKADragonfly/spirit-of-77-foundry/releases/latest/download/system.json",
+  "download": "https://github.com/AKADragonfly/spirit-of-77-foundry/releases/latest/download/system.zip",
   "license": "LICENSE",
   "readme": "README.md",
-  "bugs": "https://github.com/AKADragonfly/spirit-of-77/issues",
-  "changelog": "https://github.com/AKADragonfly/spirit-of-77/releases",
+  "bugs": "https://github.com/AKADragonfly/spirit-of-77-foundry/issues",
+  "changelog": "https://github.com/AKADragonfly/spirit-of-77-foundry/releases",
   "relationships": {
     "systems": [
       {
@@ -56,3 +56,4 @@
   }
 
 }
+
