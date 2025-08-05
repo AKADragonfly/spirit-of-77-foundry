@@ -4,12 +4,10 @@
  * @return {Promise}
  */
 export const preloadHandlebarsTemplates = async function() {
-  return loadTemplates([
-
+  return foundry.applications.handlebars.loadTemplates([
     // Actor partials.
     "systems/spirit-of-77/templates/actor/parts/actor-moves.hbs",
     "systems/spirit-of-77/templates/actor/parts/actor-gear.hbs",
-
     // Item partials
     "systems/spirit-of-77/templates/item/parts/item-effects.hbs",
   ]);
