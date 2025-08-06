@@ -1,68 +1,143 @@
-<form class="{{cssClass}}" autocomplete="off">
-  <header class="sheet-header">
-    <img src="{{item.img}}" data-edit="img" title="{{item.name}}" height="64" width="64"/>
-    <div class="header-fields">
-      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Move Name"/></h1>
-    </div>
-  </header>
-  
-  <nav class="sheet-tabs tabs" data-group="primary">
-    <a class="item" data-tab="description">Description</a>
-    <a class="item" data-tab="details">Details</a>
-  </nav>
-  
-  <section class="sheet-body">
-    <div class="tab" data-group="primary" data-tab="description">
-      <div class="form-group">
-        <label>Description:</label>
-        {{editor system.description target="system.description" button=true owner=owner editable=editable}}
-      </div>
-    </div>
+import { SPIRIT77 } from "../helpers/config.mjs";
+
+/**
+ * Extend the basic ItemSheet with Spirit of '77 specific functionality
+ * @extends {ItemSheet}
+ */
+export class Spirit77ItemSheet extends ItemSheet {
+
+  /** @override */
+  static get defaultOptions() {
+    return foundry.utils.mergeObject(super.defaultOptions, {
+      classes: ["spirit77", "sheet", "item"],
+      width: 520,
+      height: 480,
+      tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "description" }],
+      submitOnChange: true,
+      submitOnClose: true
+    });
+  }
+
+  /** @override */
+  get template() {
+    const path = "systems/spirit-of-77/templates/item";
+    return `${path}/item-${this.item.type}-sheet.hbs`;
+  }
+
+  /** @override */
+  getData() {
+    // Retrieve base data structure.
+    const context = super.getData();
+
+    // Use a safe clone of the item data for further operations.
+    const itemData = context.item;
+
+    console.log('Item data in getData:', itemData.system); // Debug log
+
+    // Retrieve the roll data for TinyMCE editors.
+    context.rollData = {};
+    let actor = this.object?.parent ?? null;
+    if (actor) {
+      context.rollData = actor.getRollData();
+    }
+
+    // Add configuration data
+    context.config = CONFIG.SPIRIT77;
+
+    // Prepare type-specific data
+    this._prepareItemTypeData(context);
+
+    return context;
+  }
+
+  /**
+   * Prepare type-specific data
+   */
+  _prepareItemTypeData(context) {
+    const itemData = context.item;
+
+    if (itemData.type === 'move') {
+      // Prepare stat options for moves
+      context.statOptions = [];
+      const statKeys = ['might', 'hustle', 'brains', 'smooth', 'soul'];
+      for (const key of statKeys) {
+        context.statOptions.push({
+          key: key,
+          label: key.charAt(0).toUpperCase() + key.slice(1),
+          selected: itemData.system.stat === key
+        });
+      }
+    }
+
+    if (itemData.type === 'gear') {
+      // Prepare weapon range options for gear (if it's a weapon)
+      context.rangeOptions = [];
+      const ranges = ['close', 'reach', 'near', 'far'];
+      for (const key of ranges) {
+        context.rangeOptions.push({
+          key: key,
+          label: key.charAt(0).toUpperCase() + key.slice(1),
+          selected: itemData.system.range === key
+        });
+      }
+    }
+
+    if (itemData.type === 'thang') {
+      // Prepare thang type options
+      context.thangTypeOptions = [];
+      const thangTypes = ['aptitude', 'contact', 'gear', 'ride'];
+      for (const key of thangTypes) {
+        context.thangTypeOptions.push({
+          key: key,
+          label: key.charAt(0).toUpperCase() + key.slice(1),
+          selected: itemData.system.thangType === key
+        });
+      }
+
+      // Prepare stat options for thangs
+      context.statOptions = [];
+      const statKeys = ['might', 'hustle', 'brains', 'smooth', 'soul'];
+      for (const key of statKeys) {
+        context.statOptions.push({
+          key: key,
+          label: key.charAt(0).toUpperCase() + key.slice(1),
+          selected: itemData.system.rollStat === key
+        });
+      }
+    }
+
+    if (itemData.type === 'vehicle') {
+      // Prepare vehicle type options
+      context.vehicleTypeOptions = [];
+      const vehicleTypes = ['sedan', 'truck', 'motorcycle', 'van'];
+      for (const key of vehicleTypes) {
+        context.vehicleTypeOptions.push({
+          key: key,
+          label: key.charAt(0).toUpperCase() + key.slice(1),
+          selected: itemData.system.vehicleType === key
+        });
+      }
+    }
+  }
+
+  /** @override */
+  activateListeners(html) {
+    super.activateListeners(html);
+
+    // Everything below here is only needed if the sheet is editable
+    if (!this.options.editable) return;
+
+    // Let Foundry handle form submission naturally
+    // Remove our custom listeners and rely on submitOnChange
+  }
+
+  /**
+   * Handle form submission properly
+   */
+  async _updateObject(event, formData) {
+    console.log('Form data received:', formData);
     
-    <div class="tab" data-group="primary" data-tab="details">
-      {{!-- Move type is set by creation button, no need for dropdown --}}
-      <div class="form-group" style="display: none;">
-        <input name="system.moveType" type="hidden" value="{{system.moveType}}"/>
-      </div>
-      
-      <div class="form-group">
-        <label>Stat:</label>
-        <select name="system.stat">
-          {{#each statOptions}}
-          <option value="{{key}}" {{#if selected}}selected{{/if}}>{{label}}</option>
-          {{/each}}
-        </select>
-      </div>
-      
-      <div class="form-group">
-        <label>Move Modifier:</label>
-        <div style="display: flex; gap: 10px; align-items: center;">
-          <input name="system.modifier" type="text" value="{{system.modifier}}" placeholder="+1" style="width: 60px;"/>
-          <input name="system.modifierDescription" type="text" value="{{system.modifierDescription}}" placeholder="when acting cool under pressure" style="flex: 1;"/>
-        </div>
-        <small>Optional static bonus/penalty for this move</small>
-      </div>
-      
-      <div class="results-section">
-        <h3>Results</h3>
-        
-        <div class="result-group">
-          <label>Success ({{#if system.success.value}}{{system.success.value}}{{else}}10{{/if}}+):</label>
-          <input name="system.success.value" type="number" value="{{system.success.value}}" min="1" max="12" placeholder="10"/>
-          <textarea name="system.success.text" placeholder="What happens on a success...">{{system.success.text}}</textarea>
-        </div>
-        
-        <div class="result-group">
-          <label>Partial Success ({{#if system.partial.value}}{{system.partial.value}}{{else}}7{{/if}}-{{#if system.success.value}}{{subtract system.success.value 1}}{{else}}9{{/if}}):</label>
-          <input name="system.partial.value" type="number" value="{{system.partial.value}}" min="1" max="12" placeholder="7"/>
-          <textarea name="system.partial.text" placeholder="What happens on a partial success...">{{system.partial.text}}</textarea>
-        </div>
-        
-        <div class="result-group">
-          <label>Failure ({{#if system.partial.value}}{{subtract system.partial.value 1}}{{else}}6{{/if}} or less):</label>
-          <textarea name="system.failure.text" placeholder="What happens on a failure...">{{system.failure.text}}</textarea>
-        </div>
-      </div>
-    </div>
-  </section>
-</form>
+    // Process the formData and update the item
+    return this.object.update(formData);
+  }
+}
