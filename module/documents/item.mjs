@@ -33,17 +33,21 @@ export class Spirit77Item extends Item {
   }
 
   /**
-   * Prepare Move type specific data - BETTER VERSION
+   * Prepare Move type specific data - DEBUG VERSION
    */
   _prepareMoveData(itemData) {
     if (itemData.type !== 'move') return;
 
     const systemData = itemData.system;
     
+    console.log('_prepareMoveData called with systemData:', systemData);
+    
     // Only set defaults if the entire objects don't exist
     if (!systemData.success || typeof systemData.success !== 'object') {
+      console.log('Setting success defaults');
       systemData.success = { value: 10, text: '' };
     } else {
+      console.log('Success exists:', systemData.success);
       // Only set missing sub-properties, don't overwrite existing ones
       if (systemData.success.value === undefined || systemData.success.value === null) {
         systemData.success.value = 10;
@@ -54,8 +58,10 @@ export class Spirit77Item extends Item {
     }
     
     if (!systemData.partial || typeof systemData.partial !== 'object') {
+      console.log('Setting partial defaults');
       systemData.partial = { value: 7, text: '' };
     } else {
+      console.log('Partial exists:', systemData.partial);
       if (systemData.partial.value === undefined || systemData.partial.value === null) {
         systemData.partial.value = 7;
       }
@@ -65,8 +71,10 @@ export class Spirit77Item extends Item {
     }
     
     if (!systemData.failure || typeof systemData.failure !== 'object') {
+      console.log('Setting failure defaults');
       systemData.failure = { text: '' };
     } else {
+      console.log('Failure exists:', systemData.failure);
       if (systemData.failure.text === undefined || systemData.failure.text === null) {
         systemData.failure.text = '';
       }
@@ -94,6 +102,8 @@ export class Spirit77Item extends Item {
     if (systemData.moveType === undefined || systemData.moveType === null) {
       systemData.moveType = 'basic';
     }
+    
+    console.log('Final systemData after _prepareMoveData:', systemData);
   }
 
   /**
