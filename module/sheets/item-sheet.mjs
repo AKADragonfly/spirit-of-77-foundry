@@ -127,7 +127,35 @@ export class Spirit77ItemSheet extends ItemSheet {
     // Everything below here is only needed if the sheet is editable
     if (!this.options.editable) return;
 
-    // Remove all the custom form handling - let Foundry do it
-    // The submitOnChange: true option will handle updates automatically
+    // Handle rollable buttons
+    html.find('.rollable').click(this._onRoll.bind(this));
+  }
+
+  /**
+   * Handle roll buttons
+   */
+  async _onRoll(event) {
+    event.preventDefault();
+    const element = event.currentTarget;
+    const dataset = element.dataset;
+
+    // Handle item rolls
+    if (dataset.rollType === 'item') {
+      return this.item.roll();
+    }
+  }
+
+  /**
+   * Override the default update behavior
+   */
+  async _updateObject(event, formData) {
+    console.log('Form data received in _updateObject:', formData);
+    
+    // Ensure nested objects are properly structured
+    const processedData = foundry.utils.expandObject(formData);
+    console.log('Processed data:', processedData);
+    
+    // Update the object
+    return this.object.update(processedData);
   }
 }
