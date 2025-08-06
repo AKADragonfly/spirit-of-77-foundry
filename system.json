@@ -2,7 +2,7 @@
   "id": "spirit-of-77",
   "title": "Spirit of '77",
   "description": "A custom Foundry VTT system for the Spirit of '77 RPG, built on PbtA mechanics with 1970s styling and complete character sheet control. Based on the PbtA system by asacolips-projects and inspired by the Monsters of the Week implementation.",
-  "version": "1.2.9",
+  "version": "1.3.0",
   "compatibility": {
     "minimum": "11",
     "verified": "12"
@@ -56,6 +56,7 @@
   }
 
 }
+
 
 
 
