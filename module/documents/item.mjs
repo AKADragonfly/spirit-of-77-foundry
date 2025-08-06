@@ -33,7 +33,8 @@ export class Spirit77Item extends Item {
   }
 
   /**
-   * Prepare Move type specific data - DEBUG VERSION
+   * Prepare Move type specific data - MINIMAL CONSERVATIVE VERSION
+   * Only creates objects if they're completely missing, never touches existing ones
    */
   _prepareMoveData(itemData) {
     if (itemData.type !== 'move') return;
@@ -42,64 +43,29 @@ export class Spirit77Item extends Item {
     
     console.log('_prepareMoveData called with systemData:', systemData);
     
-    // Only set defaults if the entire objects don't exist
-    if (!systemData.success || typeof systemData.success !== 'object') {
-      console.log('Setting success defaults');
+    // ONLY create objects if they're completely missing - never touch existing ones
+    if (!systemData.success) {
+      console.log('Creating success object');
       systemData.success = { value: 10, text: '' };
-    } else {
-      console.log('Success exists:', systemData.success);
-      // Only set missing sub-properties, don't overwrite existing ones
-      if (systemData.success.value === undefined || systemData.success.value === null) {
-        systemData.success.value = 10;
-      }
-      if (systemData.success.text === undefined || systemData.success.text === null) {
-        systemData.success.text = '';
-      }
     }
     
-    if (!systemData.partial || typeof systemData.partial !== 'object') {
-      console.log('Setting partial defaults');
+    if (!systemData.partial) {
+      console.log('Creating partial object');
       systemData.partial = { value: 7, text: '' };
-    } else {
-      console.log('Partial exists:', systemData.partial);
-      if (systemData.partial.value === undefined || systemData.partial.value === null) {
-        systemData.partial.value = 7;
-      }
-      if (systemData.partial.text === undefined || systemData.partial.text === null) {
-        systemData.partial.text = '';
-      }
     }
     
-    if (!systemData.failure || typeof systemData.failure !== 'object') {
-      console.log('Setting failure defaults');
+    if (!systemData.failure) {
+      console.log('Creating failure object');
       systemData.failure = { text: '' };
-    } else {
-      console.log('Failure exists:', systemData.failure);
-      if (systemData.failure.text === undefined || systemData.failure.text === null) {
-        systemData.failure.text = '';
-      }
     }
     
-    // Only set defaults if truly missing
-    if (systemData.modifier === undefined || systemData.modifier === null) {
-      systemData.modifier = '';
-    }
-    
-    if (systemData.modifierDescription === undefined || systemData.modifierDescription === null) {
-      systemData.modifierDescription = '';
-    }
-    
-    // Only set stat if missing or invalid
-    if (!systemData.stat || systemData.stat === '') {
+    // Only set stat if completely missing
+    if (!systemData.stat) {
       systemData.stat = 'might';
-    } else {
-      const validStats = ['might', 'hustle', 'brains', 'smooth', 'soul'];
-      if (!validStats.includes(systemData.stat)) {
-        systemData.stat = 'might';
-      }
     }
     
-    if (systemData.moveType === undefined || systemData.moveType === null) {
+    // Only set moveType if completely missing
+    if (!systemData.moveType) {
       systemData.moveType = 'basic';
     }
     
@@ -200,15 +166,23 @@ export class Spirit77Item extends Item {
   }
 
   /**
-   * Roll a move - USING SAME FALLBACK SYSTEM AS ACTOR
+   * Roll a move - FIXED VERSION WITH BETTER ERROR HANDLING
    */
   async rollMove() {
     if (this.type !== 'move') return;
 
     const actor = this.actor;
-    if (!actor) return;
+    if (!actor) {
+      ui.notifications.warn("This move has no associated actor!");
+      return;
+    }
 
     const statKey = this.system.stat;
+    if (!statKey || !actor.system.stats[statKey]) {
+      ui.notifications.error(`Invalid stat "${statKey}" for move "${this.name}"`);
+      return;
+    }
+
     const statValue = actor.getStatValue(statKey);
     const tempModifier = parseInt(actor.system.resources?.modifiers?.temporary || 0);
     const moveModifier = this.system.modifier ? parseInt(this.system.modifier) || 0 : 0;
@@ -244,17 +218,22 @@ export class Spirit77Item extends Item {
     try {
       const roll = new Roll(rollFormula);
       
-      // Try the old async method first
+      // Try the modern async method first, then fall back to sync
       try {
         await roll.evaluate({ async: true });
       } catch (asyncError) {
         console.warn('Move async roll failed, trying sync:', asyncError);
-        roll.evaluateSync();
+        try {
+          roll.evaluateSync();
+        } catch (syncError) {
+          console.error('Both async and sync roll failed:', asyncError, syncError);
+          throw new Error('Roll evaluation failed completely');
+        }
       }
 
       // Determine result type
       let resultType = 'failure';
-      let resultText = this.system.success?.text || '';
+      let resultText = this.system.failure?.text || '';
       
       if (roll.total >= (this.system.success?.value || 10)) {
         resultType = 'success';
@@ -262,8 +241,6 @@ export class Spirit77Item extends Item {
       } else if (roll.total >= (this.system.partial?.value || 7)) {
         resultType = 'partial';
         resultText = this.system.partial?.text || '';
-      } else {
-        resultText = this.system.failure?.text || '';
       }
 
       const messageData = {
@@ -274,21 +251,36 @@ export class Spirit77Item extends Item {
       };
 
       // Reset temporary modifiers after use
-      await actor.update({
-        'system.resources.modifiers.temporary': 0,
-        'system.resources.modifiers.somethingExtra': false
-      });
+      try {
+        await actor.update({
+          'system.resources.modifiers.temporary': 0,
+          'system.resources.modifiers.somethingExtra': false
+        });
+      } catch (updateError) {
+        console.warn('Failed to reset temporary modifiers:', updateError);
+      }
 
       return ChatMessage.create(messageData);
       
     } catch (error) {
       console.error('Move roll failed completely:', error);
+      ui.notifications.error(`Move roll failed: ${error.message}`);
       
-      // Manual fallback - create a basic chat message
-      const manualRoll = Math.floor(Math.random() * 6) + 1 + Math.floor(Math.random() * 6) + 1 + totalModifier;
+      // Manual fallback - create a basic chat message with manual dice
+      const die1 = Math.floor(Math.random() * 6) + 1;
+      const die2 = Math.floor(Math.random() * 6) + 1;
+      const manualRoll = die1 + die2 + totalModifier;
+      
       let resultType = 'failure';
-      if (manualRoll >= (this.system.success?.value || 10)) resultType = 'success';
-      else if (manualRoll >= (this.system.partial?.value || 7)) resultType = 'partial';
+      let resultText = this.system.failure?.text || '';
+      
+      if (manualRoll >= (this.system.success?.value || 10)) {
+        resultType = 'success';
+        resultText = this.system.success?.text || '';
+      } else if (manualRoll >= (this.system.partial?.value || 7)) {
+        resultType = 'partial';
+        resultText = this.system.partial?.text || '';
+      }
       
       const stat = actor.system.stats[statKey];
       ChatMessage.create({
@@ -296,14 +288,15 @@ export class Spirit77Item extends Item {
         content: `
           <div class="spirit77-move-roll">
             <div class="roll-header">
-              <strong>${actor.name}</strong> uses <em>${this.name}</em> (Manual Roll - Foundry Issue)
+              <strong>${actor.name}</strong> uses <em>${this.name}</em> (Manual Roll - System Issue)
             </div>
             <div class="roll-stat">
               Rolling ${stat.label} (${statValue})
             </div>
             <div class="roll-result ${resultType}">
-              <strong>${manualRoll} - ${resultType.charAt(0).toUpperCase() + resultType.slice(1)}</strong>
+              <strong>[${die1}, ${die2}] + ${totalModifier} = ${manualRoll} - ${resultType.charAt(0).toUpperCase() + resultType.slice(1)}</strong>
             </div>
+            ${resultText ? `<div class="roll-description">${resultText}</div>` : ''}
           </div>
         `
       });
