@@ -6,23 +6,29 @@ import { SPIRIT77 } from "../helpers/config.mjs";
  */
 export class Spirit77ItemSheet extends ItemSheet {
 
+  constructor(...args) {
+    super(...args);
+    
+    // Debounce timer for updates
+    this._updateTimer = null;
+    this._pendingUpdates = {};
+  }
+
   /** @override */
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ["spirit77", "sheet", "item"],
       width: 520,
       height: 480,
-      tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "description" }]
+      tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "description" }],
+      submitOnChange: true,
+      submitOnClose: true
     });
   }
 
   /** @override */
   get template() {
     const path = "systems/spirit-of-77/templates/item";
-    // Return a single sheet for all item types.
-    // return `${path}/item-sheet.hbs`;
-    // Alternatively, you could use the following return statement to do a
-    // unique item sheet by type, like `weapon-sheet.hbs`.
     return `${path}/item-${this.item.type}-sheet.hbs`;
   }
 
@@ -33,6 +39,8 @@ export class Spirit77ItemSheet extends ItemSheet {
 
     // Use a safe clone of the item data for further operations.
     const itemData = context.item;
+
+    console.log('Item data in getData:', itemData.system); // Debug log
 
     // Retrieve the roll data for TinyMCE editors.
     context.rollData = {};
@@ -59,24 +67,24 @@ export class Spirit77ItemSheet extends ItemSheet {
     if (itemData.type === 'move') {
       // Prepare stat options for moves
       context.statOptions = [];
-      for (let [key, label] of Object.entries(CONFIG.SPIRIT77.stats)) {
+      const statKeys = ['might', 'hustle', 'brains', 'smooth', 'soul'];
+      for (const key of statKeys) {
         context.statOptions.push({
           key: key,
-          label: game.i18n.localize(label),
+          label: key.charAt(0).toUpperCase() + key.slice(1),
           selected: itemData.system.stat === key
         });
       }
-
-      // Note: Removed moveTypeOptions since it's redundant - move type is set by creation button
     }
 
     if (itemData.type === 'gear') {
       // Prepare weapon range options for gear (if it's a weapon)
       context.rangeOptions = [];
-      for (let [key, label] of Object.entries(CONFIG.SPIRIT77.weaponRanges)) {
+      const ranges = ['close', 'reach', 'near', 'far'];
+      for (const key of ranges) {
         context.rangeOptions.push({
           key: key,
-          label: game.i18n.localize(label),
+          label: key.charAt(0).toUpperCase() + key.slice(1),
           selected: itemData.system.range === key
         });
       }
@@ -85,20 +93,22 @@ export class Spirit77ItemSheet extends ItemSheet {
     if (itemData.type === 'thang') {
       // Prepare thang type options
       context.thangTypeOptions = [];
-      for (let [key, label] of Object.entries(CONFIG.SPIRIT77.thangTypes)) {
+      const thangTypes = ['aptitude', 'contact', 'gear', 'ride'];
+      for (const key of thangTypes) {
         context.thangTypeOptions.push({
           key: key,
-          label: game.i18n.localize(label),
+          label: key.charAt(0).toUpperCase() + key.slice(1),
           selected: itemData.system.thangType === key
         });
       }
 
       // Prepare stat options for thangs
       context.statOptions = [];
-      for (let [key, label] of Object.entries(CONFIG.SPIRIT77.stats)) {
+      const statKeys = ['might', 'hustle', 'brains', 'smooth', 'soul'];
+      for (const key of statKeys) {
         context.statOptions.push({
           key: key,
-          label: game.i18n.localize(label),
+          label: key.charAt(0).toUpperCase() + key.slice(1),
           selected: itemData.system.rollStat === key
         });
       }
@@ -107,10 +117,11 @@ export class Spirit77ItemSheet extends ItemSheet {
     if (itemData.type === 'vehicle') {
       // Prepare vehicle type options
       context.vehicleTypeOptions = [];
-      for (let [key, label] of Object.entries(CONFIG.SPIRIT77.vehicleTypes)) {
+      const vehicleTypes = ['sedan', 'truck', 'motorcycle', 'van'];
+      for (const key of vehicleTypes) {
         context.vehicleTypeOptions.push({
           key: key,
-          label: game.i18n.localize(label),
+          label: key.charAt(0).toUpperCase() + key.slice(1),
           selected: itemData.system.vehicleType === key
         });
       }
@@ -124,99 +135,131 @@ export class Spirit77ItemSheet extends ItemSheet {
     // Everything below here is only needed if the sheet is editable
     if (!this.options.editable) return;
 
-    // Handle form field changes for immediate feedback
-    html.find('input, select, textarea').change(this._onFieldChange.bind(this));
-    html.find('input, select, textarea').blur(this._onFieldChange.bind(this));
+    // Handle form field changes with debouncing
+    html.find('input, select, textarea').on('input change', this._onFieldChange.bind(this));
     
-    // Handle enter key presses
-    html.find('input, textarea').keydown(this._onKeyDown.bind(this));
+    // Handle form submission
+    html.find('form').on('submit', this._onSubmit.bind(this));
   }
 
   /**
-   * Handle individual field changes for immediate saving
+   * Handle individual field changes with debouncing
    * @param {Event} event   The originating change event
    * @private
    */
-  async _onFieldChange(event) {
+  _onFieldChange(event) {
     event.preventDefault();
+    
     const element = event.currentTarget;
     const field = element.name;
-    const value = element.type === 'checkbox' ? element.checked : 
-                  element.type === 'number' ? parseFloat(element.value) || 0 : 
-                  element.value;
+    let value = element.value;
     
-    // Create update object
-    const updateData = {};
-    updateData[field] = value;
-    
-    console.log('Updating field:', field, 'with value:', value); // Debug log
-    
-    // Update the item
-    try {
-      await this.object.update(updateData);
-      console.log('Update successful'); // Debug log
-    } catch (error) {
-      console.error('Update failed:', error);
+    // Handle different input types
+    if (element.type === 'checkbox') {
+      value = element.checked;
+    } else if (element.type === 'number') {
+      value = parseFloat(value) || 0;
     }
+    
+    console.log('Field changed:', field, '=', value); // Debug log
+    
+    // Store the pending update
+    this._pendingUpdates[field] = value;
+    
+    // Clear existing timer
+    if (this._updateTimer) {
+      clearTimeout(this._updateTimer);
+    }
+    
+    // Set new timer for debounced update
+    this._updateTimer = setTimeout(() => {
+      this._applyPendingUpdates();
+    }, 300); // 300ms delay
   }
 
   /**
-   * Handle key down events
-   * @param {Event} event   The originating keydown event
+   * Apply all pending updates
    * @private
    */
-  async _onKeyDown(event) {
-    // Handle Enter key
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      await this._onFieldChange(event);
+  async _applyPendingUpdates() {
+    if (Object.keys(this._pendingUpdates).length === 0) return;
+    
+    console.log('Applying pending updates:', this._pendingUpdates); // Debug log
+    
+    try {
+      // Make a copy of pending updates
+      const updateData = foundry.utils.deepClone(this._pendingUpdates);
+      
+      // Clear pending updates
+      this._pendingUpdates = {};
+      
+      // Apply the update
+      await this.object.update(updateData, { diff: false, recursive: false });
+      
+      console.log('Batch update successful'); // Debug log
+      
+    } catch (error) {
+      console.error('Batch update failed:', error);
+      // Restore failed updates to pending
+      Object.assign(this._pendingUpdates, updateData);
     }
   }
 
   /**
-   * Handle form submission - CRITICAL FOR DATA PERSISTENCE
+   * Handle form submission
+   * @param {Event} event   The originating submit event
+   * @private
+   */
+  async _onSubmit(event) {
+    event.preventDefault();
+    
+    // Apply any pending updates first
+    await this._applyPendingUpdates();
+    
+    // Then proceed with normal form submission
+    return super._onSubmit(event);
+  }
+
+  /**
+   * Handle form submission data processing
    * @param {Event} event      The form submission event  
    * @param {Object} formData  The form data object
    * @private
    */
   async _updateObject(event, formData) {
-    console.log('Form submission data:', formData); // Debug log
+    console.log('_updateObject called with:', formData); // Debug log
     
-    // Handle special number field conversions
-    if (formData['system.success.value'] !== undefined) {
-      formData['system.success.value'] = parseInt(formData['system.success.value']) || 10;
-    }
-    if (formData['system.partial.value'] !== undefined) {
-      formData['system.partial.value'] = parseInt(formData['system.partial.value']) || 7;
-    }
+    // Process the form data
+    const processedData = {};
     
-    // Handle modifier field - ensure it's a string
-    if (formData['system.modifier'] !== undefined) {
-      formData['system.modifier'] = String(formData['system.modifier'] || '');
-    }
-    
-    // Handle modifierDescription field
-    if (formData['system.modifierDescription'] !== undefined) {
-      formData['system.modifierDescription'] = String(formData['system.modifierDescription'] || '');
-    }
-    
-    // Ensure all text fields are strings
-    const textFields = [
-      'system.description',
-      'system.success.text', 
-      'system.partial.text',
-      'system.failure.text'
-    ];
-    
-    for (const field of textFields) {
-      if (formData[field] !== undefined) {
-        formData[field] = String(formData[field] || '');
+    for (const [key, value] of Object.entries(formData)) {
+      // Handle number fields
+      if (key.includes('.value') && typeof value === 'string') {
+        processedData[key] = parseInt(value) || 0;
+      }
+      // Handle text fields
+      else {
+        processedData[key] = value || '';
       }
     }
     
-    console.log('Processed form data:', formData); // Debug log
+    console.log('Processed form data:', processedData); // Debug log
     
-    // Update the object using the parent class method
-    return super._updateObject(event, formData);
+    // Update the object
+    return this.object.update(processedData, { diff: false, recursive: false });
+  }
+
+  /** @override */
+  async close(options = {}) {
+    // Apply any pending updates before closing
+    await this._applyPendingUpdates();
+    
+    // Clear the timer
+    if (this._updateTimer) {
+      clearTimeout(this._updateTimer);
+      this._updateTimer = null;
+    }
+    
+    return super.close(options);
   }
 }
