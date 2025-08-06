@@ -33,6 +33,9 @@ export class Spirit77ItemSheet extends ItemSheet {
     const itemData = context.item;
 
     console.log('Item data in getData:', itemData.system); // Debug log
+    console.log('SUCCESS TEXT FOR TEMPLATE:', itemData.system.success?.text); // ADD THIS
+    console.log('PARTIAL TEXT FOR TEMPLATE:', itemData.system.partial?.text); // ADD THIS
+    console.log('FAILURE TEXT FOR TEMPLATE:', itemData.system.failure?.text); // ADD THIS
 
     // Retrieve the roll data for TinyMCE editors.
     context.rollData = {};
