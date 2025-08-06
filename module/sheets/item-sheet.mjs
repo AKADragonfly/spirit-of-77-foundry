@@ -6,14 +6,6 @@ import { SPIRIT77 } from "../helpers/config.mjs";
  */
 export class Spirit77ItemSheet extends ItemSheet {
 
-  constructor(...args) {
-    super(...args);
-    
-    // Debounce timer for updates
-    this._updateTimer = null;
-    this._pendingUpdates = {};
-  }
-
   /** @override */
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
@@ -135,93 +127,12 @@ export class Spirit77ItemSheet extends ItemSheet {
     // Everything below here is only needed if the sheet is editable
     if (!this.options.editable) return;
 
-    // Handle form field changes with debouncing
-    html.find('input, select, textarea').on('input change', this._onFieldChange.bind(this));
-    
-    // Handle form submission
-    html.find('form').on('submit', this._onSubmit.bind(this));
+    // Let Foundry handle form changes normally - remove custom debouncing
+    // The submitOnChange: true option will handle updates properly
   }
 
   /**
-   * Handle individual field changes with debouncing
-   * @param {Event} event   The originating change event
-   * @private
-   */
-  _onFieldChange(event) {
-    event.preventDefault();
-    
-    const element = event.currentTarget;
-    const field = element.name;
-    let value = element.value;
-    
-    // Handle different input types
-    if (element.type === 'checkbox') {
-      value = element.checked;
-    } else if (element.type === 'number') {
-      value = parseFloat(value) || 0;
-    }
-    
-    console.log('Field changed:', field, '=', value); // Debug log
-    
-    // Store the pending update
-    this._pendingUpdates[field] = value;
-    
-    // Clear existing timer
-    if (this._updateTimer) {
-      clearTimeout(this._updateTimer);
-    }
-    
-    // Set new timer for debounced update
-    this._updateTimer = setTimeout(() => {
-      this._applyPendingUpdates();
-    }, 300); // 300ms delay
-  }
-
-  /**
-   * Apply all pending updates
-   * @private
-   */
-  async _applyPendingUpdates() {
-    if (Object.keys(this._pendingUpdates).length === 0) return;
-    
-    console.log('Applying pending updates:', this._pendingUpdates); // Debug log
-    
-    try {
-      // Make a copy of pending updates
-      const updateData = foundry.utils.deepClone(this._pendingUpdates);
-      
-      // Clear pending updates
-      this._pendingUpdates = {};
-      
-      // Apply the update
-      await this.object.update(updateData, { diff: false, recursive: false });
-      
-      console.log('Batch update successful'); // Debug log
-      
-    } catch (error) {
-      console.error('Batch update failed:', error);
-      // Restore failed updates to pending
-      Object.assign(this._pendingUpdates, updateData);
-    }
-  }
-
-  /**
-   * Handle form submission
-   * @param {Event} event   The originating submit event
-   * @private
-   */
-  async _onSubmit(event) {
-    event.preventDefault();
-    
-    // Apply any pending updates first
-    await this._applyPendingUpdates();
-    
-    // Then proceed with normal form submission
-    return super._onSubmit(event);
-  }
-
-  /**
-   * Handle form submission data processing
+   * Handle form submission data processing - SIMPLIFIED
    * @param {Event} event      The form submission event  
    * @param {Object} formData  The form data object
    * @private
@@ -229,37 +140,8 @@ export class Spirit77ItemSheet extends ItemSheet {
   async _updateObject(event, formData) {
     console.log('_updateObject called with:', formData); // Debug log
     
-    // Process the form data
-    const processedData = {};
-    
-    for (const [key, value] of Object.entries(formData)) {
-      // Handle number fields
-      if (key.includes('.value') && typeof value === 'string') {
-        processedData[key] = parseInt(value) || 0;
-      }
-      // Handle text fields
-      else {
-        processedData[key] = value || '';
-      }
-    }
-    
-    console.log('Processed form data:', processedData); // Debug log
-    
-    // Update the object
-    return this.object.update(processedData, { diff: false, recursive: false });
-  }
-
-  /** @override */
-  async close(options = {}) {
-    // Apply any pending updates before closing
-    await this._applyPendingUpdates();
-    
-    // Clear the timer
-    if (this._updateTimer) {
-      clearTimeout(this._updateTimer);
-      this._updateTimer = null;
-    }
-    
-    return super.close(options);
+    // Let Foundry handle the update normally without custom processing
+    // This ensures data types and structure are preserved
+    return super._updateObject(event, formData);
   }
 }
