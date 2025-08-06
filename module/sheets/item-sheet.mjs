@@ -13,7 +13,7 @@ export class Spirit77ItemSheet extends ItemSheet {
       width: 520,
       height: 480,
       tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "description" }],
-      submitOnChange: true,
+      submitOnChange: false,  // CHANGED FROM true TO false
       submitOnClose: true
     });
   }
