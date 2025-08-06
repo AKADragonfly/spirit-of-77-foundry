@@ -127,21 +127,7 @@ export class Spirit77ItemSheet extends ItemSheet {
     // Everything below here is only needed if the sheet is editable
     if (!this.options.editable) return;
 
-    // Let Foundry handle form changes normally - remove custom debouncing
-    // The submitOnChange: true option will handle updates properly
-  }
-
-  /**
-   * Handle form submission data processing - SIMPLIFIED
-   * @param {Event} event      The form submission event  
-   * @param {Object} formData  The form data object
-   * @private
-   */
-  async _updateObject(event, formData) {
-    console.log('_updateObject called with:', formData); // Debug log
-    
-    // Let Foundry handle the update normally without custom processing
-    // This ensures data types and structure are preserved
-    return super._updateObject(event, formData);
+    // Remove all the custom form handling - let Foundry do it
+    // The submitOnChange: true option will handle updates automatically
   }
 }
