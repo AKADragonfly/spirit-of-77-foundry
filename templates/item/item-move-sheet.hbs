@@ -28,11 +28,9 @@
       <div class="form-group">
         <label>Stat:</label>
         <select name="system.stat">
-          <option value="might" {{#eq system.stat "might"}}selected{{/eq}}>Might</option>
-          <option value="hustle" {{#eq system.stat "hustle"}}selected{{/eq}}>Hustle</option>
-          <option value="brains" {{#eq system.stat "brains"}}selected{{/eq}}>Brains</option>
-          <option value="smooth" {{#eq system.stat "smooth"}}selected{{/eq}}>Smooth</option>
-          <option value="soul" {{#eq system.stat "soul"}}selected{{/eq}}>Soul</option>
+          {{#each statOptions}}
+          <option value="{{key}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+          {{/each}}
         </select>
       </div>
       
