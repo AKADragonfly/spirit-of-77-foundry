@@ -37,8 +37,8 @@
       <div class="form-group">
         <label>Move Modifier:</label>
         <div style="display: flex; gap: 10px; align-items: center;">
-          <input name="system.modifier" type="text" value="{{#if system.modifier}}{{system.modifier}}{{/if}}" placeholder="+1" style="width: 60px;"/>
-          <input name="system.modifierDescription" type="text" value="{{#if system.modifierDescription}}{{system.modifierDescription}}{{/if}}" placeholder="when acting cool under pressure" style="flex: 1;"/>
+          <input name="system.modifier" type="text" value="{{system.modifier}}" placeholder="+1" style="width: 60px;"/>
+          <input name="system.modifierDescription" type="text" value="{{system.modifierDescription}}" placeholder="when acting cool under pressure" style="flex: 1;"/>
         </div>
         <small>Optional static bonus/penalty for this move</small>
       </div>
@@ -49,18 +49,18 @@
         <div class="result-group">
           <label>Success ({{#if system.success.value}}{{system.success.value}}{{else}}10{{/if}}+):</label>
           <input name="system.success.value" type="number" value="{{#if system.success.value}}{{system.success.value}}{{else}}10{{/if}}" min="1" max="12" placeholder="10"/>
-          <textarea name="system.success.text" placeholder="What happens on a success...">{{#if system.success.text}}{{system.success.text}}{{/if}}</textarea>
+          <textarea name="system.success.text" placeholder="What happens on a success...">{{system.success.text}}</textarea>
         </div>
         
         <div class="result-group">
           <label>Partial Success ({{#if system.partial.value}}{{system.partial.value}}{{else}}7{{/if}}-{{#if system.success.value}}{{subtract system.success.value 1}}{{else}}9{{/if}}):</label>
           <input name="system.partial.value" type="number" value="{{#if system.partial.value}}{{system.partial.value}}{{else}}7{{/if}}" min="1" max="12" placeholder="7"/>
-          <textarea name="system.partial.text" placeholder="What happens on a partial success...">{{#if system.partial.text}}{{system.partial.text}}{{/if}}</textarea>
+          <textarea name="system.partial.text" placeholder="What happens on a partial success...">{{system.partial.text}}</textarea>
         </div>
         
         <div class="result-group">
           <label>Failure ({{#if system.partial.value}}{{subtract system.partial.value 1}}{{else}}6{{/if}} or less):</label>
-          <textarea name="system.failure.text" placeholder="What happens on a failure...">{{#if system.failure.text}}{{system.failure.text}}{{/if}}</textarea>
+          <textarea name="system.failure.text" placeholder="What happens on a failure...">{{system.failure.text}}</textarea>
         </div>
       </div>
       
