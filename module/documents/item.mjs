@@ -40,13 +40,42 @@ export class Spirit77Item extends Item {
 
     const systemData = itemData.system;
     
-    // Ensure default values exist
-    systemData.success = systemData.success || { value: 10, text: '' };
-    systemData.partial = systemData.partial || { value: 7, text: '' };
-    systemData.failure = systemData.failure || { text: '' };
-    systemData.modifier = systemData.modifier || '';
-    systemData.stat = systemData.stat || 'might';
-    systemData.moveType = systemData.moveType || 'basic';
+    // ONLY set defaults if the values are actually undefined/null, not if they exist
+    // This prevents overriding saved values with defaults
+    if (systemData.success === undefined) {
+      systemData.success = { value: 10, text: '' };
+    }
+    if (systemData.partial === undefined) {
+      systemData.partial = { value: 7, text: '' };
+    }
+    if (systemData.failure === undefined) {
+      systemData.failure = { text: '' };
+    }
+    if (systemData.modifier === undefined) {
+      systemData.modifier = '';
+    }
+    if (systemData.modifierDescription === undefined) {
+      systemData.modifierDescription = '';
+    }
+    // CRITICAL FIX: Only set stat to 'might' if it's actually undefined
+    // Don't override saved values with defaults
+    if (systemData.stat === undefined) {
+      systemData.stat = 'might';
+    }
+    if (systemData.moveType === undefined) {
+      systemData.moveType = 'basic';
+    }
+    
+    // Ensure nested objects have proper structure
+    if (systemData.success && typeof systemData.success !== 'object') {
+      systemData.success = { value: 10, text: '' };
+    }
+    if (systemData.partial && typeof systemData.partial !== 'object') {
+      systemData.partial = { value: 7, text: '' };
+    }
+    if (systemData.failure && typeof systemData.failure !== 'object') {
+      systemData.failure = { text: '' };
+    }
   }
 
   /**
