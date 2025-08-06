@@ -146,14 +146,36 @@ export class Spirit77ItemSheet extends ItemSheet {
   }
 
   /**
-   * Override the default update behavior
+   * Override the default update behavior - DEBUG VERSION
    */
   async _updateObject(event, formData) {
-    console.log('Form data received in _updateObject:', formData);
+    console.log('=== DEBUG FORM SUBMISSION ===');
+    console.log('Raw form data received:', formData);
     
-    // Ensure nested objects are properly structured
+    // Check specifically for the nested fields we care about
+    console.log('system.success.text in formData:', formData['system.success.text']);
+    console.log('system.success.value in formData:', formData['system.success.value']);
+    console.log('system.partial.text in formData:', formData['system.partial.text']);
+    console.log('system.partial.value in formData:', formData['system.partial.value']);
+    console.log('system.failure.text in formData:', formData['system.failure.text']);
+    console.log('system.modifier in formData:', formData['system.modifier']);
+    console.log('system.modifierDescription in formData:', formData['system.modifierDescription']);
+    
+    // Show all form data keys
+    console.log('All form data keys:', Object.keys(formData));
+    
+    // Process with expandObject
     const processedData = foundry.utils.expandObject(formData);
-    console.log('Processed data:', processedData);
+    console.log('After expandObject:', processedData);
+    
+    if (processedData.system) {
+      console.log('Processed system data:', processedData.system);
+      console.log('success object after processing:', processedData.system.success);
+      console.log('partial object after processing:', processedData.system.partial);
+      console.log('failure object after processing:', processedData.system.failure);
+    }
+    
+    console.log('=== END DEBUG ===');
     
     // Update the object
     return this.object.update(processedData);
