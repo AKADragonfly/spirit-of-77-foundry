@@ -33,8 +33,8 @@ export class Spirit77Item extends Item {
   }
 
   /**
-   * Prepare Move type specific data - MINIMAL CONSERVATIVE VERSION
-   * Only creates objects if they're completely missing, never touches existing ones
+   * Prepare Move type specific data - TEMPLATE STRUCTURE VERSION
+   * Ensures all required objects exist for the template to work properly
    */
   _prepareMoveData(itemData) {
     if (itemData.type !== 'move') return;
@@ -43,31 +43,46 @@ export class Spirit77Item extends Item {
     
     console.log('_prepareMoveData called with systemData:', systemData);
     
-    // ONLY create objects if they're completely missing - never touch existing ones
-    if (!systemData.success) {
-      console.log('Creating success object');
-      systemData.success = { value: 10, text: '' };
+    // Ensure nested objects exist with proper structure - but preserve existing data
+    if (!systemData.success || typeof systemData.success !== 'object') {
+      console.log('Creating/fixing success object');
+      systemData.success = { 
+        value: systemData.success?.value || 10, 
+        text: systemData.success?.text || '' 
+      };
+    } else {
+      // Ensure required properties exist without overwriting
+      if (systemData.success.value === undefined) systemData.success.value = 10;
+      if (systemData.success.text === undefined) systemData.success.text = '';
     }
     
-    if (!systemData.partial) {
-      console.log('Creating partial object');
-      systemData.partial = { value: 7, text: '' };
+    if (!systemData.partial || typeof systemData.partial !== 'object') {
+      console.log('Creating/fixing partial object');
+      systemData.partial = { 
+        value: systemData.partial?.value || 7, 
+        text: systemData.partial?.text || '' 
+      };
+    } else {
+      // Ensure required properties exist without overwriting
+      if (systemData.partial.value === undefined) systemData.partial.value = 7;
+      if (systemData.partial.text === undefined) systemData.partial.text = '';
     }
     
-    if (!systemData.failure) {
-      console.log('Creating failure object');
-      systemData.failure = { text: '' };
+    if (!systemData.failure || typeof systemData.failure !== 'object') {
+      console.log('Creating/fixing failure object');
+      systemData.failure = { 
+        text: systemData.failure?.text || '' 
+      };
+    } else {
+      // Ensure required properties exist without overwriting
+      if (systemData.failure.text === undefined) systemData.failure.text = '';
     }
     
-    // Only set stat if completely missing
-    if (!systemData.stat) {
-      systemData.stat = 'might';
-    }
-    
-    // Only set moveType if completely missing
-    if (!systemData.moveType) {
-      systemData.moveType = 'basic';
-    }
+    // Set simple properties with defaults if missing
+    if (!systemData.stat) systemData.stat = 'might';
+    if (!systemData.moveType) systemData.moveType = 'basic';
+    if (systemData.modifier === undefined) systemData.modifier = '';
+    if (systemData.modifierDescription === undefined) systemData.modifierDescription = '';
     
     console.log('Final systemData after _prepareMoveData:', systemData);
   }
