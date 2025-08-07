@@ -49,7 +49,7 @@
         <div class="result-group">
           <label>Success ({{#if system.success.value}}{{system.success.value}}{{else}}10{{/if}}+):</label>
           <input name="system.success.value" type="number" value="{{#if system.success.value}}{{system.success.value}}{{else}}10{{/if}}" min="1" max="12" placeholder="10"/>
-          <textarea name="system.success.text" placeholder="What happens on a success...">{{system.success.text}}</textarea>
+          <input name="system.success.text" type="text" value="{{system.success.text}}" placeholder="What happens on a success..." style="width: 100%;" />
         </div>
         
         <div class="result-group">
@@ -72,3 +72,4 @@
     </div>
   </section>
 </form>
+
