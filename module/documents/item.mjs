@@ -36,8 +36,8 @@ export class Spirit77Item extends Item {
   }
 
   /**
-   * Prepare Move type specific data - EARLY INITIALIZATION VERSION
-   * Creates objects in prepareBaseData so they exist before template rendering
+   * Prepare Move type specific data - ULTRA-CONSERVATIVE VERSION
+   * Only creates objects if they're completely missing, never touches existing data
    */
   _prepareMoveData(itemData) {
     if (itemData.type !== 'move') return;
@@ -47,28 +47,25 @@ export class Spirit77Item extends Item {
     console.log('_prepareMoveData called with systemData:', systemData);
     console.log('BEFORE: success.text =', systemData.success?.text);
     
-    // Force creation of nested objects if they don't exist
-    // This must happen before template rendering
-    if (!systemData.success) {
+    // ULTRA-CONSERVATIVE: Only create if completely undefined/null
+    if (!systemData.success || systemData.success === null || systemData.success === undefined) {
       console.log('Creating success object');
       systemData.success = { value: 10, text: '' };
     }
     
-    if (!systemData.partial) {
+    if (!systemData.partial || systemData.partial === null || systemData.partial === undefined) {
       console.log('Creating partial object');
       systemData.partial = { value: 7, text: '' };
     }
     
-    if (!systemData.failure) {
+    if (!systemData.failure || systemData.failure === null || systemData.failure === undefined) {
       console.log('Creating failure object');
       systemData.failure = { text: '' };
     }
     
-    // Only set simple properties if missing
+    // Don't touch other properties if they exist
     if (!systemData.stat) systemData.stat = 'might';
     if (!systemData.moveType) systemData.moveType = 'basic';
-    if (systemData.modifier === undefined) systemData.modifier = '';
-    if (systemData.modifierDescription === undefined) systemData.modifierDescription = '';
     
     console.log('Final systemData after _prepareMoveData:', systemData);
     console.log('AFTER: success.text =', systemData.success?.text);
