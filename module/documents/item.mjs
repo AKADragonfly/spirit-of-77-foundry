@@ -18,8 +18,10 @@ export class Spirit77Item extends Item {
     // Data modifications in this step occur before processing embedded
     // documents or derived data.
     
-    // MOVE prepareMoveData HERE - before template rendering
-    this._prepareMoveData(this);
+    // CRITICAL: Only prepare move data if it doesn't already exist properly
+    if (this.type === 'move') {
+      this._ensureMoveDataStructure();
+    }
   }
 
   /** @override */
@@ -30,45 +32,69 @@ export class Spirit77Item extends Item {
 
     // Make separate methods for each Item type (move, equipment, weapon) to keep
     // things organized.
-    // this._prepareMoveData(itemData); // REMOVED - now called in prepareBaseData
     this._prepareEquipmentData(itemData);
     this._prepareWeaponData(itemData);
   }
 
   /**
-   * Prepare Move type specific data - ULTRA-CONSERVATIVE VERSION
-   * Only creates objects if they're completely missing, never touches existing data
+   * Ensure move data structure exists without overwriting existing data
+   * CRITICAL FIX: Only create missing structure, never overwrite existing text
    */
-  _prepareMoveData(itemData) {
-    if (itemData.type !== 'move') return;
-
-    const systemData = itemData.system;
+  _ensureMoveDataStructure() {
+    const systemData = this.system;
     
-    console.log('_prepareMoveData called with systemData:', systemData);
-    console.log('BEFORE: success.text =', systemData.success?.text);
+    console.log('_ensureMoveDataStructure called with systemData:', systemData);
     
-    // ULTRA-CONSERVATIVE: Only create if completely undefined/null
-    if (!systemData.success || systemData.success === null || systemData.success === undefined) {
-      console.log('Creating success object');
-      systemData.success = { value: 10, text: '' };
+    // Only create structure if completely missing, never touch existing data
+    let needsUpdate = false;
+    const updateData = {};
+    
+    if (!systemData.success || typeof systemData.success !== 'object') {
+      console.log('Creating missing success object');
+      updateData['system.success'] = { value: 10, text: '' };
+      needsUpdate = true;
+    } else if (systemData.success && typeof systemData.success.value === 'undefined') {
+      console.log('Adding missing success.value');
+      updateData['system.success.value'] = 10;
+      needsUpdate = true;
     }
     
-    if (!systemData.partial || systemData.partial === null || systemData.partial === undefined) {
-      console.log('Creating partial object');
-      systemData.partial = { value: 7, text: '' };
+    if (!systemData.partial || typeof systemData.partial !== 'object') {
+      console.log('Creating missing partial object');
+      updateData['system.partial'] = { value: 7, text: '' };
+      needsUpdate = true;
+    } else if (systemData.partial && typeof systemData.partial.value === 'undefined') {
+      console.log('Adding missing partial.value');
+      updateData['system.partial.value'] = 7;
+      needsUpdate = true;
     }
     
-    if (!systemData.failure || systemData.failure === null || systemData.failure === undefined) {
-      console.log('Creating failure object');
-      systemData.failure = { text: '' };
+    if (!systemData.failure || typeof systemData.failure !== 'object') {
+      console.log('Creating missing failure object');
+      updateData['system.failure'] = { text: '' };
+      needsUpdate = true;
     }
     
-    // Don't touch other properties if they exist
-    if (!systemData.stat) systemData.stat = 'might';
-    if (!systemData.moveType) systemData.moveType = 'basic';
+    // Only set defaults for completely missing values
+    if (!systemData.stat) {
+      updateData['system.stat'] = 'might';
+      needsUpdate = true;
+    }
+    if (!systemData.moveType) {
+      updateData['system.moveType'] = 'basic';
+      needsUpdate = true;
+    }
     
-    console.log('Final systemData after _prepareMoveData:', systemData);
-    console.log('AFTER: success.text =', systemData.success?.text);
+    // Apply updates asynchronously if needed
+    if (needsUpdate) {
+      console.log('Applying structure updates:', updateData);
+      // Use setTimeout to prevent recursion during data preparation
+      setTimeout(() => {
+        this.update(updateData);
+      }, 1);
+    }
+    
+    console.log('Final systemData after _ensureMoveDataStructure:', systemData);
   }
 
   /**
