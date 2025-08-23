@@ -68,30 +68,7 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
         });
       }
 
-      // CRITICAL FIX: Ensure move result objects exist in the actual item data
-      // Don't just ensure they exist in context, ensure they exist on the actual item
-      const currentData = this.item.system;
-      let needsUpdate = false;
-      const updateData = {};
-
-      if (!currentData.success || typeof currentData.success !== 'object') {
-        updateData['system.success'] = { value: 10, text: '' };
-        needsUpdate = true;
-      }
-      if (!currentData.partial || typeof currentData.partial !== 'object') {
-        updateData['system.partial'] = { value: 7, text: '' };
-        needsUpdate = true;
-      }
-      if (!currentData.failure || typeof currentData.failure !== 'object') {
-        updateData['system.failure'] = { text: '' };
-        needsUpdate = true;
-      }
-
-      // Apply the update immediately if needed, but don't await it
-      if (needsUpdate) {
-        console.log('Applying critical move data fix:', updateData);
-        this.item.update(updateData);
-      }
+      // REMOVED: No more data structure fixing here - let the Item document handle it
     }
 
     if (itemData.type === 'gear') {
@@ -182,14 +159,8 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
     // Handle rollable buttons
     html.find('.rollable').click(this._onRoll.bind(this));
 
-    // Handle form changes with debouncing to prevent excessive updates
-    let debounceTimer;
-    html.find('input, textarea, select').on('change', (event) => {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
-        this._onSubmit(event);
-      }, 300); // 300ms delay
-    });
+    // SIMPLIFIED: Use standard form handling without excessive debouncing
+    // Let Foundry handle the form submissions normally
   }
 
   /**
@@ -207,7 +178,7 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
   }
 
   /**
-   * Override the default update behavior to handle arrays and nested objects properly
+   * SIMPLIFIED: Override the default update behavior to handle arrays properly
    */
   async _updateObject(event, formData) {
     console.log('Form submission - Raw form data:', formData);
@@ -225,49 +196,10 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
     const processedData = foundry.utils.expandObject(formData);
     console.log('After expandObject:', processedData);
     
-    // CRITICAL FIX: Ensure we don't overwrite existing nested data
-    // If we're updating move data, preserve existing nested objects
-    if (this.item.type === 'move' && processedData.system) {
-      const currentSystem = this.item.system;
-      
-      // Preserve existing success object while allowing updates
-      if (processedData.system.success) {
-        processedData.system.success = foundry.utils.mergeObject(
-          currentSystem.success || { value: 10, text: '' }, 
-          processedData.system.success || {}
-        );
-      }
-      
-      // Preserve existing partial object while allowing updates  
-      if (processedData.system.partial) {
-        processedData.system.partial = foundry.utils.mergeObject(
-          currentSystem.partial || { value: 7, text: '' }, 
-          processedData.system.partial || {}
-        );
-      }
-      
-      // Preserve existing failure object while allowing updates
-      if (processedData.system.failure) {
-        processedData.system.failure = foundry.utils.mergeObject(
-          currentSystem.failure || { text: '' }, 
-          processedData.system.failure || {}
-        );
-      }
-    }
+    // SIMPLIFIED: Let the normal update process handle data merging
+    // No more complex nested object merging that was causing issues
     
     // Update the object
     return this.object.update(processedData);
-  }
-
-  /** @override */
-  async _onSubmit(event, options = {}) {
-    // Prevent the default form submission behavior
-    event.preventDefault();
-    
-    // Get the form data
-    const formData = this._getSubmitData();
-    
-    // Update immediately without waiting
-    return this._updateObject(event, formData);
   }
 }
