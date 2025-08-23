@@ -96,15 +96,15 @@ Hooks.once('init', async function() {
   CONFIG.Actor.documentClass = Spirit77Actor;
   CONFIG.Item.documentClass = Spirit77Item;
 
-  // Register sheet application classes
-  Actors.unregisterSheet("core", ActorSheet);
-  Actors.registerSheet("spirit77", Spirit77ActorSheet, {
+  // Register sheet application classes using Foundry v13 API
+  foundry.documents.collections.Actors.unregisterSheet("core", foundry.appv1.sheets.ActorSheet);
+  foundry.documents.collections.Actors.registerSheet("spirit77", Spirit77ActorSheet, {
     types: ["character", "npc"],
     makeDefault: true
   });
 
-  Items.unregisterSheet("core", ItemSheet);
-  Items.registerSheet("spirit77", Spirit77ItemSheet, {
+  foundry.documents.collections.Items.unregisterSheet("core", foundry.appv1.sheets.ItemSheet);
+  foundry.documents.collections.Items.registerSheet("spirit77", Spirit77ItemSheet, {
     types: ["move", "gear", "thang", "vehicle", "xtech"],
     makeDefault: true
   });
