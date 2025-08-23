@@ -6,22 +6,13 @@ export class Spirit77Item extends Item {
 
   /** @override */
   prepareData() {
-    // Prepare data for the item. Calling the super version of this executes
-    // the following, in order: data reset (to clear active effects),
-    // prepareBaseData(), prepareEmbeddedDocuments() (including active effects),
-    // prepareDerivedData().
     super.prepareData();
   }
 
   /** @override */
   prepareBaseData() {
-    // Data modifications in this step occur before processing embedded
-    // documents or derived data.
-    
-    // CRITICAL: Only ensure move data structure exists, never trigger updates during preparation
-    if (this.type === 'move') {
-      this._ensureMoveDataStructureInMemory();
-    }
+    // CRITICAL: Don't modify data during preparation - only during sheet initialization
+    // The template.json fix means data structure should already be correct
   }
 
   /** @override */
@@ -34,66 +25,6 @@ export class Spirit77Item extends Item {
     // things organized.
     this._prepareEquipmentData(itemData);
     this._prepareWeaponData(itemData);
-  }
-
-  /**
-   * Ensure move data structure exists IN MEMORY ONLY during data preparation
-   * CRITICAL FIX: Only create missing objects, PRESERVE existing text values
-   */
-  _ensureMoveDataStructureInMemory() {
-    const systemData = this.system;
-    
-    console.log('_ensureMoveDataStructureInMemory called');
-    
-    // Only ensure objects exist in memory, PRESERVE existing text values
-    if (!systemData.success || typeof systemData.success !== 'object') {
-      console.log('Creating missing success object in memory');
-      systemData.success = { value: 10, text: '' };
-    } else {
-      // Ensure the success object has required properties but PRESERVE existing text
-      if (typeof systemData.success.value === 'undefined') {
-        systemData.success.value = 10;
-      }
-      if (typeof systemData.success.text === 'undefined') {
-        systemData.success.text = '';
-      }
-    }
-    
-    if (!systemData.partial || typeof systemData.partial !== 'object') {
-      console.log('Creating missing partial object in memory');
-      systemData.partial = { value: 7, text: '' };
-    } else {
-      // Ensure the partial object has required properties but PRESERVE existing text
-      if (typeof systemData.partial.value === 'undefined') {
-        systemData.partial.value = 7;
-      }
-      if (typeof systemData.partial.text === 'undefined') {
-        systemData.partial.text = '';
-      }
-    }
-    
-    if (!systemData.failure || typeof systemData.failure !== 'object') {
-      console.log('Creating missing failure object in memory');
-      systemData.failure = { text: '' };
-    } else {
-      // Ensure the failure object has required properties but PRESERVE existing text
-      if (typeof systemData.failure.text === 'undefined') {
-        systemData.failure.text = '';
-      }
-    }
-    
-    // Only set defaults for completely missing values
-    if (!systemData.stat) {
-      systemData.stat = 'might';
-    }
-    if (!systemData.moveType) {
-      systemData.moveType = 'basic';
-    }
-    
-    console.log('Final systemData after _ensureMoveDataStructureInMemory:', systemData);
-    console.log('Success text preserved:', systemData.success?.text);
-    console.log('Partial text preserved:', systemData.partial?.text);
-    console.log('Failure text preserved:', systemData.failure?.text);
   }
 
   /**
