@@ -2,9 +2,9 @@ import { SPIRIT77 } from "../helpers/config.mjs";
 
 /**
  * Extend the basic ItemSheet with Spirit of '77 specific functionality
- * @extends {ItemSheet}
+ * @extends {foundry.appv1.sheets.ItemSheet}
  */
-export class Spirit77ItemSheet extends ItemSheet {
+export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
 
   /** @override */
   static get defaultOptions() {
@@ -13,7 +13,7 @@ export class Spirit77ItemSheet extends ItemSheet {
       width: 520,
       height: 480,
       tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "description" }],
-      submitOnChange: true,
+      submitOnChange: false,  // Prevent auto-submission on every keystroke
       submitOnClose: true
     });
   }
@@ -68,15 +68,29 @@ export class Spirit77ItemSheet extends ItemSheet {
         });
       }
 
-      // Ensure move result objects exist with defaults
-      if (!itemData.system.success || typeof itemData.system.success !== 'object') {
-        itemData.system.success = { value: 10, text: '' };
+      // CRITICAL FIX: Ensure move result objects exist in the actual item data
+      // Don't just ensure they exist in context, ensure they exist on the actual item
+      const currentData = this.item.system;
+      let needsUpdate = false;
+      const updateData = {};
+
+      if (!currentData.success || typeof currentData.success !== 'object') {
+        updateData['system.success'] = { value: 10, text: '' };
+        needsUpdate = true;
       }
-      if (!itemData.system.partial || typeof itemData.system.partial !== 'object') {
-        itemData.system.partial = { value: 7, text: '' };
+      if (!currentData.partial || typeof currentData.partial !== 'object') {
+        updateData['system.partial'] = { value: 7, text: '' };
+        needsUpdate = true;
       }
-      if (!itemData.system.failure || typeof itemData.system.failure !== 'object') {
-        itemData.system.failure = { text: '' };
+      if (!currentData.failure || typeof currentData.failure !== 'object') {
+        updateData['system.failure'] = { text: '' };
+        needsUpdate = true;
+      }
+
+      // Apply the update immediately if needed, but don't await it
+      if (needsUpdate) {
+        console.log('Applying critical move data fix:', updateData);
+        this.item.update(updateData);
       }
     }
 
@@ -167,6 +181,15 @@ export class Spirit77ItemSheet extends ItemSheet {
 
     // Handle rollable buttons
     html.find('.rollable').click(this._onRoll.bind(this));
+
+    // Handle form changes with debouncing to prevent excessive updates
+    let debounceTimer;
+    html.find('input, textarea, select').on('change', (event) => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        this._onSubmit(event);
+      }, 300); // 300ms delay
+    });
   }
 
   /**
@@ -201,6 +224,36 @@ export class Spirit77ItemSheet extends ItemSheet {
     // Process nested object data properly
     const processedData = foundry.utils.expandObject(formData);
     console.log('After expandObject:', processedData);
+    
+    // CRITICAL FIX: Ensure we don't overwrite existing nested data
+    // If we're updating move data, preserve existing nested objects
+    if (this.item.type === 'move' && processedData.system) {
+      const currentSystem = this.item.system;
+      
+      // Preserve existing success object while allowing updates
+      if (processedData.system.success) {
+        processedData.system.success = foundry.utils.mergeObject(
+          currentSystem.success || { value: 10, text: '' }, 
+          processedData.system.success || {}
+        );
+      }
+      
+      // Preserve existing partial object while allowing updates  
+      if (processedData.system.partial) {
+        processedData.system.partial = foundry.utils.mergeObject(
+          currentSystem.partial || { value: 7, text: '' }, 
+          processedData.system.partial || {}
+        );
+      }
+      
+      // Preserve existing failure object while allowing updates
+      if (processedData.system.failure) {
+        processedData.system.failure = foundry.utils.mergeObject(
+          currentSystem.failure || { text: '' }, 
+          processedData.system.failure || {}
+        );
+      }
+    }
     
     // Update the object
     return this.object.update(processedData);
