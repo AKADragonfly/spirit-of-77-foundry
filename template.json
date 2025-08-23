@@ -134,73 +134,63 @@
     },
     "move": {
       "templates": ["base"],
-      "system": {
-        "moveType": "basic",
-        "stat": "might",
-        "rollFormula": "2d6",
-        "modifier": "",
-        "modifierDescription": "",
-        "success": {
-          "value": 10,
-          "text": ""
-        },
-        "partial": {
-          "value": 7,
-          "text": ""
-        },
-        "failure": {
-          "text": ""
-        }
+      "moveType": "basic",
+      "stat": "might",
+      "rollFormula": "2d6",
+      "modifier": "",
+      "modifierDescription": "",
+      "success": {
+        "value": 10,
+        "text": ""
+      },
+      "partial": {
+        "value": 7,
+        "text": ""
+      },
+      "failure": {
+        "text": ""
       }
     },
     "gear": {
       "templates": ["base"],
-      "system": {
-        "quantity": 1,
-        "harm": 0,
-        "armor": 0,
-        "range": "close",
-        "traits": [],
-        "stock": 0,
-        "cost": "",
-        "notes": ""
-      }
+      "quantity": 1,
+      "harm": 0,
+      "armor": 0,
+      "range": "close",
+      "traits": [],
+      "stock": 0,
+      "cost": "",
+      "notes": ""
     },
     "thang": {
       "templates": ["base"],
-      "system": {
-        "thangType": "aptitude",
-        "permanent": true,
-        "mechanical": false,
-        "rollStat": "smooth",
-        "rollBonus": 0,
-        "moveText": "",
-        "notes": ""
-      }
+      "thangType": "aptitude",
+      "permanent": true,
+      "mechanical": false,
+      "rollStat": "smooth",
+      "rollBonus": 0,
+      "moveText": "",
+      "notes": ""
     },
     "vehicle": {
       "templates": ["base"],
-      "system": {
-        "power": 1,
-        "looks": 0,
-        "armor": 0,
-        "traits": [],
-        "vehicleType": "sedan",
-        "make": "",
-        "model": "",
-        "year": "",
-        "notes": ""
-      }
+      "power": 1,
+      "looks": 0,
+      "armor": 0,
+      "traits": [],
+      "vehicleType": "sedan",
+      "make": "",
+      "model": "",
+      "year": "",
+      "notes": ""
     },
     "xtech": {
       "templates": ["base"],
-      "system": {
-        "baseType": "gear",
-        "modifications": [],
-        "prototype": true,
-        "specialRules": "",
-        "notes": ""
-      }
+      "baseType": "gear",
+      "modifications": [],
+      "prototype": true,
+      "specialRules": "",
+      "notes": ""
     }
   }
 }
