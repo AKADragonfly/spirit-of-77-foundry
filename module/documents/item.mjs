@@ -38,27 +38,48 @@ export class Spirit77Item extends Item {
 
   /**
    * Ensure move data structure exists IN MEMORY ONLY during data preparation
-   * CRITICAL FIX: Never call update() during data preparation - causes infinite loops
+   * CRITICAL FIX: Only create missing objects, PRESERVE existing text values
    */
   _ensureMoveDataStructureInMemory() {
     const systemData = this.system;
     
     console.log('_ensureMoveDataStructureInMemory called');
     
-    // Only ensure objects exist in memory, never write to database during preparation
+    // Only ensure objects exist in memory, PRESERVE existing text values
     if (!systemData.success || typeof systemData.success !== 'object') {
       console.log('Creating missing success object in memory');
       systemData.success = { value: 10, text: '' };
+    } else {
+      // Ensure the success object has required properties but PRESERVE existing text
+      if (typeof systemData.success.value === 'undefined') {
+        systemData.success.value = 10;
+      }
+      if (typeof systemData.success.text === 'undefined') {
+        systemData.success.text = '';
+      }
     }
     
     if (!systemData.partial || typeof systemData.partial !== 'object') {
       console.log('Creating missing partial object in memory');
       systemData.partial = { value: 7, text: '' };
+    } else {
+      // Ensure the partial object has required properties but PRESERVE existing text
+      if (typeof systemData.partial.value === 'undefined') {
+        systemData.partial.value = 7;
+      }
+      if (typeof systemData.partial.text === 'undefined') {
+        systemData.partial.text = '';
+      }
     }
     
     if (!systemData.failure || typeof systemData.failure !== 'object') {
       console.log('Creating missing failure object in memory');
       systemData.failure = { text: '' };
+    } else {
+      // Ensure the failure object has required properties but PRESERVE existing text
+      if (typeof systemData.failure.text === 'undefined') {
+        systemData.failure.text = '';
+      }
     }
     
     // Only set defaults for completely missing values
@@ -70,6 +91,9 @@ export class Spirit77Item extends Item {
     }
     
     console.log('Final systemData after _ensureMoveDataStructureInMemory:', systemData);
+    console.log('Success text preserved:', systemData.success?.text);
+    console.log('Partial text preserved:', systemData.partial?.text);
+    console.log('Failure text preserved:', systemData.failure?.text);
   }
 
   /**
