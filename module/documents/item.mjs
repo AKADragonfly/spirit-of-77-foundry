@@ -11,18 +11,15 @@ export class Spirit77Item extends Item {
 
   /** @override */
   prepareBaseData() {
-    // CRITICAL: Don't modify data during preparation - only during sheet initialization
-    // The template.json fix means data structure should already be correct
+    // MINIMAL: Don't modify data during preparation
   }
 
   /** @override */
   prepareDerivedData() {
+    // MINIMAL: Keep this simple
     const itemData = this;
     const systemData = itemData.system;
-    const flags = itemData.flags.spirit77 || {};
-
-    // Make separate methods for each Item type (move, equipment, weapon) to keep
-    // things organized.
+    
     this._prepareEquipmentData(itemData);
     this._prepareWeaponData(itemData);
   }
@@ -32,9 +29,6 @@ export class Spirit77Item extends Item {
    */
   _prepareEquipmentData(itemData) {
     if (itemData.type !== 'equipment') return;
-
-    const systemData = itemData.system;
-    // Add any equipment-specific calculations here
   }
 
   /**
@@ -42,38 +36,27 @@ export class Spirit77Item extends Item {
    */
   _prepareWeaponData(itemData) {
     if (itemData.type !== 'weapon') return;
-
-    const systemData = itemData.system;
-    // Add any weapon-specific calculations here
   }
 
   /**
    * Override getRollData() that's supplied to rolls.
    */
   getRollData() {
-    // If present, return the actor's roll data.
     if (!this.actor) return null;
     const rollData = this.actor.getRollData();
-    // Grab the item's system data as well.
     rollData.item = foundry.utils.deepClone(this.system);
-
     return rollData;
   }
 
   /**
    * Handle clickable rolls.
-   * @param {Event} event   The originating click event
-   * @private
    */
   async roll() {
     const item = this;
-
-    // Initialize chat data.
     const speaker = ChatMessage.getSpeaker({ actor: this.actor });
     const rollMode = game.settings.get('core', 'rollMode');
     const label = `[${item.type}] ${item.name}`;
 
-    // If there's no roll data, send a chat message.
     if (!this.system.rollFormula) {
       ChatMessage.create({
         speaker: speaker,
@@ -81,19 +64,14 @@ export class Spirit77Item extends Item {
         flavor: label,
         content: item.system.description ?? ''
       });
-    }
-    // Otherwise, create a roll and send a chat message from it.
-    else {
-      // Handle moves with roll formulas
+    } else {
       if (item.type === 'move') {
         return this.rollMove();
       }
 
-      // For other items, do a basic roll with fallback system
       try {
         const roll = new Roll(this.system.rollFormula);
         
-        // Try the old async method first
         try {
           await roll.evaluate({ async: true });
         } catch (asyncError) {
@@ -121,7 +99,7 @@ export class Spirit77Item extends Item {
   }
 
   /**
-   * Roll a move - FIXED VERSION WITH BETTER ERROR HANDLING
+   * Roll a move
    */
   async rollMove() {
     if (this.type !== 'move') return;
@@ -146,25 +124,21 @@ export class Spirit77Item extends Item {
     let diceFormula = '2d6';
     let rollType = 'normal';
     
-    // Check for "Something Less" penalty (4+ harm)
     if (actor.system.harm.value >= 4) {
-      diceFormula = '3d6kl2'; // Roll 3 dice, keep lowest 2
+      diceFormula = '3d6kl2';
       rollType = 'somethingLess';
     }
     
-    // Check for "Something Extra" 
     if (somethingExtra) {
       if (actor.system.harm.value >= 4) {
-        // Something Extra and Something Less cancel out
         diceFormula = '2d6';
         rollType = 'cancelOut';
       } else {
-        diceFormula = '3d6kh2'; // Roll 3 dice, keep highest 2
+        diceFormula = '3d6kh2';
         rollType = 'somethingExtra';
       }
     }
     
-    // Build the complete formula with static values
     let totalModifier = statValue + tempModifier + moveModifier;
     let rollFormula = `${diceFormula} + ${totalModifier}`;
     
@@ -173,7 +147,6 @@ export class Spirit77Item extends Item {
     try {
       const roll = new Roll(rollFormula);
       
-      // Try the modern async method first, then fall back to sync
       try {
         await roll.evaluate({ async: true });
       } catch (asyncError) {
@@ -186,7 +159,6 @@ export class Spirit77Item extends Item {
         }
       }
 
-      // Determine result type
       let resultType = 'failure';
       let resultText = this.system.failure?.text || '';
       
@@ -205,7 +177,6 @@ export class Spirit77Item extends Item {
         sound: CONFIG.sounds.dice
       };
 
-      // Reset temporary modifiers after use
       try {
         await actor.update({
           'system.resources.modifiers.temporary': 0,
@@ -220,41 +191,6 @@ export class Spirit77Item extends Item {
     } catch (error) {
       console.error('Move roll failed completely:', error);
       ui.notifications.error(`Move roll failed: ${error.message}`);
-      
-      // Manual fallback - create a basic chat message with manual dice
-      const die1 = Math.floor(Math.random() * 6) + 1;
-      const die2 = Math.floor(Math.random() * 6) + 1;
-      const manualRoll = die1 + die2 + totalModifier;
-      
-      let resultType = 'failure';
-      let resultText = this.system.failure?.text || '';
-      
-      if (manualRoll >= (this.system.success?.value || 10)) {
-        resultType = 'success';
-        resultText = this.system.success?.text || '';
-      } else if (manualRoll >= (this.system.partial?.value || 7)) {
-        resultType = 'partial';
-        resultText = this.system.partial?.text || '';
-      }
-      
-      const stat = actor.system.stats[statKey];
-      ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor: actor }),
-        content: `
-          <div class="spirit77-move-roll">
-            <div class="roll-header">
-              <strong>${actor.name}</strong> uses <em>${this.name}</em> (Manual Roll - System Issue)
-            </div>
-            <div class="roll-stat">
-              Rolling ${stat.label} (${statValue})
-            </div>
-            <div class="roll-result ${resultType}">
-              <strong>[${die1}, ${die2}] + ${totalModifier} = ${manualRoll} - ${resultType.charAt(0).toUpperCase() + resultType.slice(1)}</strong>
-            </div>
-            ${resultText ? `<div class="roll-description">${resultText}</div>` : ''}
-          </div>
-        `
-      });
     }
   }
 
@@ -266,7 +202,6 @@ export class Spirit77Item extends Item {
     const statKey = this.system.stat;
     const stat = actor.system.stats[statKey];
     
-    // Get individual die results for breakdown
     const diceResults = roll.dice[0]?.results?.map(r => r.result) || [];
     let diceBreakdown = '';
     
