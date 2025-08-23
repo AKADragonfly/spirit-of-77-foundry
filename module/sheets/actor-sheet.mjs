@@ -7,9 +7,9 @@ import { SPIRIT77 } from "../helpers/config.mjs";
  * by asacolips-projects, customized for Spirit of '77 RPG mechanics and
  * 1970s aesthetic.
  * 
- * @extends {ActorSheet}
+ * @extends {foundry.appv1.sheets.ActorSheet}
  */
-export class Spirit77ActorSheet extends ActorSheet {
+export class Spirit77ActorSheet extends foundry.appv1.sheets.ActorSheet {
 
   /** @override */
   static get defaultOptions() {
