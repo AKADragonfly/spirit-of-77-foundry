@@ -13,7 +13,7 @@ export class Spirit77ItemSheet extends ItemSheet {
       width: 520,
       height: 480,
       tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "description" }],
-      submitOnChange: false,  // CHANGED FROM true TO false
+      submitOnChange: true,
       submitOnClose: true
     });
   }
@@ -26,18 +26,15 @@ export class Spirit77ItemSheet extends ItemSheet {
 
   /** @override */
   getData() {
-    // Retrieve base data structure.
+    // Retrieve base data structure
     const context = super.getData();
 
-    // Use a safe clone of the item data for further operations.
+    // Use a safe clone of the item data for further operations
     const itemData = context.item;
 
-    console.log('Item data in getData:', itemData.system); // Debug log
-    console.log('SUCCESS TEXT FOR TEMPLATE:', itemData.system.success?.text); // ADD THIS
-    console.log('PARTIAL TEXT FOR TEMPLATE:', itemData.system.partial?.text); // ADD THIS
-    console.log('FAILURE TEXT FOR TEMPLATE:', itemData.system.failure?.text); // ADD THIS
+    console.log('Item data in getData:', itemData.system);
 
-    // Retrieve the roll data for TinyMCE editors.
+    // Retrieve the roll data for TinyMCE editors
     context.rollData = {};
     let actor = this.object?.parent ?? null;
     if (actor) {
@@ -70,6 +67,17 @@ export class Spirit77ItemSheet extends ItemSheet {
           selected: itemData.system.stat === key
         });
       }
+
+      // Ensure move result objects exist with defaults
+      if (!itemData.system.success || typeof itemData.system.success !== 'object') {
+        itemData.system.success = { value: 10, text: '' };
+      }
+      if (!itemData.system.partial || typeof itemData.system.partial !== 'object') {
+        itemData.system.partial = { value: 7, text: '' };
+      }
+      if (!itemData.system.failure || typeof itemData.system.failure !== 'object') {
+        itemData.system.failure = { text: '' };
+      }
     }
 
     if (itemData.type === 'gear') {
@@ -83,16 +91,24 @@ export class Spirit77ItemSheet extends ItemSheet {
           selected: itemData.system.range === key
         });
       }
+
+      // Ensure traits is an array
+      if (!Array.isArray(itemData.system.traits)) {
+        if (typeof itemData.system.traits === 'string') {
+          itemData.system.traits = itemData.system.traits.split(',').map(s => s.trim()).filter(s => s);
+        } else {
+          itemData.system.traits = [];
+        }
+      }
     }
 
     if (itemData.type === 'thang') {
-      // Prepare thang type options
+      // Prepare thang type options using CONFIG
       context.thangTypeOptions = [];
-      const thangTypes = ['aptitude', 'contact', 'gear', 'ride'];
-      for (const key of thangTypes) {
+      for (const [key, label] of Object.entries(CONFIG.SPIRIT77.thangTypes || {})) {
         context.thangTypeOptions.push({
           key: key,
-          label: key.charAt(0).toUpperCase() + key.slice(1),
+          label: game.i18n.localize(label),
           selected: itemData.system.thangType === key
         });
       }
@@ -110,15 +126,34 @@ export class Spirit77ItemSheet extends ItemSheet {
     }
 
     if (itemData.type === 'vehicle') {
-      // Prepare vehicle type options
+      // Prepare vehicle type options using CONFIG
       context.vehicleTypeOptions = [];
-      const vehicleTypes = ['sedan', 'truck', 'motorcycle', 'van'];
-      for (const key of vehicleTypes) {
+      for (const [key, label] of Object.entries(CONFIG.SPIRIT77.vehicleTypes || {})) {
         context.vehicleTypeOptions.push({
           key: key,
-          label: key.charAt(0).toUpperCase() + key.slice(1),
+          label: game.i18n.localize(label),
           selected: itemData.system.vehicleType === key
         });
+      }
+
+      // Ensure traits is an array
+      if (!Array.isArray(itemData.system.traits)) {
+        if (typeof itemData.system.traits === 'string') {
+          itemData.system.traits = itemData.system.traits.split(',').map(s => s.trim()).filter(s => s);
+        } else {
+          itemData.system.traits = [];
+        }
+      }
+    }
+
+    if (itemData.type === 'xtech') {
+      // Ensure modifications is an array
+      if (!Array.isArray(itemData.system.modifications)) {
+        if (typeof itemData.system.modifications === 'string') {
+          itemData.system.modifications = itemData.system.modifications.split(',').map(s => s.trim()).filter(s => s);
+        } else {
+          itemData.system.modifications = [];
+        }
       }
     }
   }
@@ -149,38 +184,37 @@ export class Spirit77ItemSheet extends ItemSheet {
   }
 
   /**
-   * Override the default update behavior - DEBUG VERSION
+   * Override the default update behavior to handle arrays and nested objects properly
    */
   async _updateObject(event, formData) {
-    console.log('=== DEBUG FORM SUBMISSION ===');
-    console.log('Raw form data received:', formData);
+    console.log('Form submission - Raw form data:', formData);
     
-    // Check specifically for the nested fields we care about
-    console.log('system.success.text in formData:', formData['system.success.text']);
-    console.log('system.success.value in formData:', formData['system.success.value']);
-    console.log('system.partial.text in formData:', formData['system.partial.text']);
-    console.log('system.partial.value in formData:', formData['system.partial.value']);
-    console.log('system.failure.text in formData:', formData['system.failure.text']);
-    console.log('system.modifier in formData:', formData['system.modifier']);
-    console.log('system.modifierDescription in formData:', formData['system.modifierDescription']);
+    // Handle comma-separated arrays for traits and modifications
+    if (formData['system.traits'] && typeof formData['system.traits'] === 'string') {
+      formData['system.traits'] = formData['system.traits'].split(',').map(s => s.trim()).filter(s => s);
+    }
     
-    // Show all form data keys
-    console.log('All form data keys:', Object.keys(formData));
-    
-    // Process with expandObject
+    if (formData['system.modifications'] && typeof formData['system.modifications'] === 'string') {
+      formData['system.modifications'] = formData['system.modifications'].split(',').map(s => s.trim()).filter(s => s);
+    }
+
+    // Process nested object data properly
     const processedData = foundry.utils.expandObject(formData);
     console.log('After expandObject:', processedData);
     
-    if (processedData.system) {
-      console.log('Processed system data:', processedData.system);
-      console.log('success object after processing:', processedData.system.success);
-      console.log('partial object after processing:', processedData.system.partial);
-      console.log('failure object after processing:', processedData.system.failure);
-    }
-    
-    console.log('=== END DEBUG ===');
-    
     // Update the object
     return this.object.update(processedData);
+  }
+
+  /** @override */
+  async _onSubmit(event, options = {}) {
+    // Prevent the default form submission behavior
+    event.preventDefault();
+    
+    // Get the form data
+    const formData = this._getSubmitData();
+    
+    // Update immediately without waiting
+    return this._updateObject(event, formData);
   }
 }
