@@ -29,10 +29,11 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
     // Retrieve base data structure
     const context = super.getData();
 
-    // Use a safe clone of the item data for further operations
-    const itemData = context.item;
+    // CRITICAL FIX: With corrected template.json, item data is directly on system
+    // So we need to pass the system data directly to the template
+    const itemData = context.item.system;  // Access system data directly
 
-    console.log('Item data in getData:', itemData.system);
+    console.log('Item data in getData:', itemData);
 
     // Retrieve the roll data for TinyMCE editors
     context.rollData = {};
@@ -44,19 +45,20 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
     // Add configuration data
     context.config = CONFIG.SPIRIT77;
 
-    // Prepare type-specific data
-    this._prepareItemTypeData(context);
+    // Prepare type-specific data - pass system data directly
+    this._prepareItemTypeData(context, itemData);
+
+    // CRITICAL: Merge the system data into the context root so template can access it
+    Object.assign(context, itemData);
 
     return context;
   }
 
   /**
-   * Prepare type-specific data
+   * Prepare type-specific data - Updated for corrected template.json structure
    */
-  _prepareItemTypeData(context) {
-    const itemData = context.item;
-
-    if (itemData.type === 'move') {
+  _prepareItemTypeData(context, itemData) {
+    if (this.item.type === 'move') {
       // Prepare stat options for moves
       context.statOptions = [];
       const statKeys = ['might', 'hustle', 'brains', 'smooth', 'soul'];
@@ -64,14 +66,12 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
         context.statOptions.push({
           key: key,
           label: key.charAt(0).toUpperCase() + key.slice(1),
-          selected: itemData.system.stat === key
+          selected: itemData.stat === key  // Direct access, no system wrapper
         });
       }
-
-      // REMOVED: No more data structure fixing here - let the Item document handle it
     }
 
-    if (itemData.type === 'gear') {
+    if (this.item.type === 'gear') {
       // Prepare weapon range options for gear (if it's a weapon)
       context.rangeOptions = [];
       const ranges = ['close', 'reach', 'near', 'far'];
@@ -79,28 +79,28 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
         context.rangeOptions.push({
           key: key,
           label: key.charAt(0).toUpperCase() + key.slice(1),
-          selected: itemData.system.range === key
+          selected: itemData.range === key  // Direct access, no system wrapper
         });
       }
 
       // Ensure traits is an array
-      if (!Array.isArray(itemData.system.traits)) {
-        if (typeof itemData.system.traits === 'string') {
-          itemData.system.traits = itemData.system.traits.split(',').map(s => s.trim()).filter(s => s);
+      if (!Array.isArray(itemData.traits)) {
+        if (typeof itemData.traits === 'string') {
+          itemData.traits = itemData.traits.split(',').map(s => s.trim()).filter(s => s);
         } else {
-          itemData.system.traits = [];
+          itemData.traits = [];
         }
       }
     }
 
-    if (itemData.type === 'thang') {
+    if (this.item.type === 'thang') {
       // Prepare thang type options using CONFIG
       context.thangTypeOptions = [];
       for (const [key, label] of Object.entries(CONFIG.SPIRIT77.thangTypes || {})) {
         context.thangTypeOptions.push({
           key: key,
           label: game.i18n.localize(label),
-          selected: itemData.system.thangType === key
+          selected: itemData.thangType === key  // Direct access, no system wrapper
         });
       }
 
@@ -111,39 +111,39 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
         context.statOptions.push({
           key: key,
           label: key.charAt(0).toUpperCase() + key.slice(1),
-          selected: itemData.system.rollStat === key
+          selected: itemData.rollStat === key  // Direct access, no system wrapper
         });
       }
     }
 
-    if (itemData.type === 'vehicle') {
+    if (this.item.type === 'vehicle') {
       // Prepare vehicle type options using CONFIG
       context.vehicleTypeOptions = [];
       for (const [key, label] of Object.entries(CONFIG.SPIRIT77.vehicleTypes || {})) {
         context.vehicleTypeOptions.push({
           key: key,
           label: game.i18n.localize(label),
-          selected: itemData.system.vehicleType === key
+          selected: itemData.vehicleType === key  // Direct access, no system wrapper
         });
       }
 
       // Ensure traits is an array
-      if (!Array.isArray(itemData.system.traits)) {
-        if (typeof itemData.system.traits === 'string') {
-          itemData.system.traits = itemData.system.traits.split(',').map(s => s.trim()).filter(s => s);
+      if (!Array.isArray(itemData.traits)) {
+        if (typeof itemData.traits === 'string') {
+          itemData.traits = itemData.traits.split(',').map(s => s.trim()).filter(s => s);
         } else {
-          itemData.system.traits = [];
+          itemData.traits = [];
         }
       }
     }
 
-    if (itemData.type === 'xtech') {
+    if (this.item.type === 'xtech') {
       // Ensure modifications is an array
-      if (!Array.isArray(itemData.system.modifications)) {
-        if (typeof itemData.system.modifications === 'string') {
-          itemData.system.modifications = itemData.system.modifications.split(',').map(s => s.trim()).filter(s => s);
+      if (!Array.isArray(itemData.modifications)) {
+        if (typeof itemData.modifications === 'string') {
+          itemData.modifications = itemData.modifications.split(',').map(s => s.trim()).filter(s => s);
         } else {
-          itemData.system.modifications = [];
+          itemData.modifications = [];
         }
       }
     }
@@ -158,9 +158,6 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
 
     // Handle rollable buttons
     html.find('.rollable').click(this._onRoll.bind(this));
-
-    // SIMPLIFIED: Use standard form handling without excessive debouncing
-    // Let Foundry handle the form submissions normally
   }
 
   /**
@@ -184,20 +181,17 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
     console.log('Form submission - Raw form data:', formData);
     
     // Handle comma-separated arrays for traits and modifications
-    if (formData['system.traits'] && typeof formData['system.traits'] === 'string') {
-      formData['system.traits'] = formData['system.traits'].split(',').map(s => s.trim()).filter(s => s);
+    if (formData['traits'] && typeof formData['traits'] === 'string') {
+      formData['traits'] = formData['traits'].split(',').map(s => s.trim()).filter(s => s);
     }
     
-    if (formData['system.modifications'] && typeof formData['system.modifications'] === 'string') {
-      formData['system.modifications'] = formData['system.modifications'].split(',').map(s => s.trim()).filter(s => s);
+    if (formData['modifications'] && typeof formData['modifications'] === 'string') {
+      formData['modifications'] = formData['modifications'].split(',').map(s => s.trim()).filter(s => s);
     }
 
     // Process nested object data properly
     const processedData = foundry.utils.expandObject(formData);
     console.log('After expandObject:', processedData);
-    
-    // SIMPLIFIED: Let the normal update process handle data merging
-    // No more complex nested object merging that was causing issues
     
     // Update the object
     return this.object.update(processedData);
