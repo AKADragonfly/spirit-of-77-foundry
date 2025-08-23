@@ -8,7 +8,6 @@ export const preloadHandlebarsTemplates = async function() {
     // Actor partials.
     "systems/spirit-of-77/templates/actor/parts/actor-moves.hbs",
     "systems/spirit-of-77/templates/actor/parts/actor-gear.hbs",
-    // Item partials
-    "systems/spirit-of-77/templates/item/parts/item-effects.hbs",
+    // Remove the missing item-effects.hbs template
   ]);
 };
