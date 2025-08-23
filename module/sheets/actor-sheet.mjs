@@ -15,7 +15,6 @@ export class Spirit77ActorSheet extends ActorSheet {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ["spirit77", "sheet", "actor"],
-      template: "systems/spirit-of-77/templates/actor/actor-sheet.hbs",
       width: 720,
       height: 800,
       tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "rapsheet" }]
@@ -29,53 +28,32 @@ export class Spirit77ActorSheet extends ActorSheet {
 
   /** @override */
   getData() {
-    // Retrieve the data structure from the base sheet. You can inspect or log
-    // the context variable to see the structure, but some key properties for
-    // sheets are the actor object, the data object, whether or not it's
-    // editable, the items array, and the effects array.
+    // Retrieve the data structure from the base sheet
     const context = super.getData();
 
-    // Use a safe clone of the actor data for further operations.
+    // Use a safe clone of the actor data for further operations
     const actorData = this.actor.toObject(false);
 
-    // Add the actor's data to context.data for easier access, as well as flags.
+    // Add the actor's data to context.data for easier access, as well as flags
     context.system = actorData.system;
     context.flags = actorData.flags;
 
-    // Register capitalize helper if not already registered
-    if (!Handlebars.helpers.capitalize) {
-      Handlebars.registerHelper('capitalize', function(str) {
-        if (typeof str !== 'string') return '';
-        return str.charAt(0).toUpperCase() + str.slice(1);
-      });
-    }
+    // Register all necessary Handlebars helpers
+    this._registerHandlebarsHelpers();
 
-    // Register eq helper if not already registered
-    if (!Handlebars.helpers.eq) {
-      Handlebars.registerHelper('eq', function(a, b) {
-        return a === b;
-      });
-    }
-
-    // Register subtract helper if not already registered
-    if (!Handlebars.helpers.subtract) {
-      Handlebars.registerHelper('subtract', function(a, b) {
-        return a - b;
-      });
-    }
-
-    // Prepare character data and items.
+    // Prepare character data and items
     if (actorData.type == 'character') {
       this._prepareItems(context);
       this._prepareCharacterData(context);
     }
 
-    // Prepare NPC data and items.
+    // Prepare NPC data and items
     if (actorData.type == 'npc') {
       this._prepareItems(context);
+      this._prepareNpcData(context);
     }
 
-    // Add roll data for TinyMCE editors.
+    // Add roll data for TinyMCE editors
     context.rollData = context.actor.getRollData();
 
     // Add configuration data
@@ -85,11 +63,83 @@ export class Spirit77ActorSheet extends ActorSheet {
   }
 
   /**
+   * Register necessary Handlebars helpers
+   */
+  _registerHandlebarsHelpers() {
+    // Register helpers only once
+    if (!Handlebars.helpers.capitalize) {
+      Handlebars.registerHelper('capitalize', function(str) {
+        if (typeof str !== 'string') return '';
+        return str.charAt(0).toUpperCase() + str.slice(1);
+      });
+    }
+
+    if (!Handlebars.helpers.eq) {
+      Handlebars.registerHelper('eq', function(a, b) {
+        return a === b;
+      });
+    }
+
+    if (!Handlebars.helpers.subtract) {
+      Handlebars.registerHelper('subtract', function(a, b) {
+        return (a || 0) - (b || 0);
+      });
+    }
+
+    if (!Handlebars.helpers.gte) {
+      Handlebars.registerHelper('gte', function(a, b) {
+        return (a || 0) >= (b || 0);
+      });
+    }
+
+    if (!Handlebars.helpers.join) {
+      Handlebars.registerHelper('join', function(array, separator = ', ') {
+        if (!Array.isArray(array)) return '';
+        return array.join(separator);
+      });
+    }
+
+    if (!Handlebars.helpers.times) {
+      Handlebars.registerHelper('times', function(n, options) {
+        let result = '';
+        for (let i = 0; i < n; i++) {
+          result += options.fn({ ...this, index: i });
+        }
+        return result;
+      });
+    }
+
+    if (!Handlebars.helpers.lte) {
+      Handlebars.registerHelper('lte', function(a, b) {
+        return (a || 0) <= (b || 0);
+      });
+    }
+
+    if (!Handlebars.helpers.gt) {
+      Handlebars.registerHelper('gt', function(a, b) {
+        return (a || 0) > (b || 0);
+      });
+    }
+
+    if (!Handlebars.helpers.lookup) {
+      Handlebars.registerHelper('lookup', function(obj, key) {
+        return obj && obj[key];
+      });
+    }
+
+    if (!Handlebars.helpers.unless) {
+      Handlebars.registerHelper('unless', function(conditional, options) {
+        if (!conditional) {
+          return options.fn(this);
+        } else {
+          return options.inverse(this);
+        }
+      });
+    }
+  }
+
+  /**
    * Organize and classify Items for Character sheets.
-   *
-   * @param {Object} actorData The actor to prepare.
-   *
-   * @return {undefined}
    */
   _prepareCharacterData(context) {
     // Handle stats
@@ -108,21 +158,37 @@ export class Spirit77ActorSheet extends ActorSheet {
       });
     }
 
-    // Prepare scars
+    // Prepare scars with proper mapping
+    const scarMapping = {
+      'brokeDown': 'broken',
+      'outOfGas': 'gimped', 
+      'uncool': 'ugly',
+      'spaced': 'punchy',
+      'uptight': 'whitebread'
+    };
+
     for (let [k, v] of Object.entries(context.system.scars)) {
-      v.label = game.i18n.localize(CONFIG.SPIRIT77.scarTypes[k]?.label) ?? k;
+      const mappedKey = scarMapping[k] || k;
+      v.label = game.i18n.localize(CONFIG.SPIRIT77.scarTypes[mappedKey]?.label) ?? k;
     }
   }
 
   /**
-   * Organize and classify Items for Character sheets.
-   *
-   * @param {Object} actorData The actor to prepare.
-   *
-   * @return {undefined}
+   * Prepare NPC-specific data
+   */
+  _prepareNpcData(context) {
+    // Handle stats for NPCs
+    for (let [k, v] of Object.entries(context.system.stats)) {
+      v.label = game.i18n.localize(CONFIG.SPIRIT77.stats[k]) ?? k;
+      v.effectiveValue = this.actor.getStatValue(k);
+    }
+  }
+
+  /**
+   * Organize and classify Items for sheets.
    */
   _prepareItems(context) {
-    // Initialize containers.
+    // Initialize containers
     const moves = {
       basic: [],
       role: [],
@@ -136,26 +202,27 @@ export class Spirit77ActorSheet extends ActorSheet {
     // Iterate through items, allocating to containers
     for (let i of context.items) {
       i.img = i.img || DEFAULT_TOKEN;
-      // Append to moves.
+      
+      // Append to moves
       if (i.type === 'move') {
         const moveType = i.system.moveType || 'basic';
         if (moves[moveType]) {
           moves[moveType].push(i);
         }
       }
-      // Append to gear.
+      // Append to gear
       else if (i.type === 'gear') {
         gear.push(i);
       }
-      // Append to thangs.
+      // Append to thangs
       else if (i.type === 'thang') {
         thangs.push(i);
       }
-      // Append to vehicles.
+      // Append to vehicles
       else if (i.type === 'vehicle') {
         vehicles.push(i);
       }
-      // Append to xtech.
+      // Append to xtech
       else if (i.type === 'xtech') {
         xtech.push(i);
       }
@@ -173,11 +240,11 @@ export class Spirit77ActorSheet extends ActorSheet {
   activateListeners(html) {
     super.activateListeners(html);
 
-    // Render the item sheet for viewing/editing prior to the editable check.
+    // Render the item sheet for viewing/editing prior to the editable check
     html.find('.item-edit').click(ev => {
       const li = $(ev.currentTarget).parents(".item");
       const item = this.actor.items.get(li.data("itemId"));
-      item.sheet.render(true);
+      if (item) item.sheet.render(true);
     });
 
     // Everything below here is only needed if the sheet is editable
@@ -190,17 +257,23 @@ export class Spirit77ActorSheet extends ActorSheet {
     html.find('.item-delete').click(ev => {
       const li = $(ev.currentTarget).parents(".item");
       const item = this.actor.items.get(li.data("itemId"));
-      item.delete();
-      li.slideUp(200, () => this.render(false));
+      if (item) {
+        item.delete();
+        li.slideUp(200, () => this.render(false));
+      }
     });
 
     // Active Effect management
-    html.find(".effect-control").click(ev => onManageActiveEffect(ev, this.actor));
+    html.find(".effect-control").click(ev => {
+      if (typeof onManageActiveEffect === 'function') {
+        onManageActiveEffect(ev, this.actor);
+      }
+    });
 
-    // Rollable abilities.
+    // Rollable abilities
     html.find('.rollable').click(this._onRoll.bind(this));
 
-    // Drag events for macros.
+    // Drag events for macros
     if (this.actor.isOwner) {
       let handler = ev => this._onDragStart(ev);
       html.find('li.item').each((i, li) => {
@@ -215,6 +288,9 @@ export class Spirit77ActorSheet extends ActorSheet {
 
     // Harm adjustment buttons
     html.find('.harm-adjust').click(this._onHarmAdjust.bind(this));
+    
+    // Harm level clicks (direct harm setting)
+    html.find('.harm-level').click(this._onHarmLevelClick.bind(this));
     
     // Something Extra toggle
     html.find('.something-extra-toggle').click(this._onSomethingExtraToggle.bind(this));
@@ -231,12 +307,12 @@ export class Spirit77ActorSheet extends ActorSheet {
   async _onItemCreate(event) {
     event.preventDefault();
     const header = event.currentTarget;
-    // Get the type of item to create.
+    // Get the type of item to create
     const type = header.dataset.type;
     // Get move type if specified
     const moveType = header.dataset.moveType || 'basic';
     
-    // Initialize a default name.
+    // Initialize a default name
     const name = `New ${type.charAt(0).toUpperCase() + type.slice(1)}`;
     
     // Prepare the item object with proper defaults
@@ -262,22 +338,46 @@ export class Spirit77ActorSheet extends ActorSheet {
       itemData.system = {
         description: '',
         quantity: 1,
-        weight: 0
+        harm: 0,
+        armor: 0,
+        range: 'close',
+        traits: [],
+        stock: 0,
+        cost: '',
+        notes: ''
       };
     } else if (type === 'thang') {
       itemData.system = {
         description: '',
-        thangType: 'personal'
+        thangType: 'aptitude',
+        permanent: true,
+        mechanical: false,
+        rollStat: 'smooth',
+        rollBonus: 0,
+        moveText: '',
+        notes: ''
       };
     } else if (type === 'vehicle') {
       itemData.system = {
         description: '',
-        vehicleType: 'car'
+        vehicleType: 'sedan',
+        make: '',
+        model: '',
+        year: '',
+        power: 1,
+        looks: 0,
+        armor: 0,
+        traits: [],
+        notes: ''
       };
     } else if (type === 'xtech') {
       itemData.system = {
         description: '',
-        xtechType: 'gadget'
+        baseType: 'gear',
+        modifications: [],
+        prototype: true,
+        specialRules: '',
+        notes: ''
       };
     }
 
@@ -295,7 +395,7 @@ export class Spirit77ActorSheet extends ActorSheet {
     const element = event.currentTarget;
     const dataset = element.dataset;
 
-    // Handle item rolls.
+    // Handle item rolls
     if (dataset.rollType) {
       if (dataset.rollType == 'item') {
         const itemId = element.closest('.item').dataset.itemId;
@@ -304,7 +404,7 @@ export class Spirit77ActorSheet extends ActorSheet {
       }
     }
 
-    // Handle rolls that supply the formula directly.
+    // Handle rolls that supply the formula directly
     if (dataset.roll) {
       let label = dataset.label ? `[ability] ${dataset.label}` : '';
       let roll = new Roll(dataset.roll, this.actor.getRollData());
@@ -330,7 +430,7 @@ export class Spirit77ActorSheet extends ActorSheet {
   async _onScarToggle(event) {
     event.preventDefault();
     const scar = event.currentTarget.dataset.scar;
-    const currentValue = this.actor.system.scars[scar].active;
+    const currentValue = this.actor.system.scars[scar]?.active || false;
     const updateData = {};
     updateData[`system.scars.${scar}.active`] = !currentValue;
     return this.actor.update(updateData);
@@ -347,6 +447,17 @@ export class Spirit77ActorSheet extends ActorSheet {
     const currentHarm = this.actor.system.harm.value;
     const newHarm = Math.max(0, Math.min(8, currentHarm + adjustment));
     return this.actor.update({ 'system.harm.value': newHarm });
+  }
+
+  /**
+   * Handle clicking harm levels directly
+   * @param {Event} event   The originating click event
+   * @private
+   */
+  async _onHarmLevelClick(event) {
+    event.preventDefault();
+    const harmValue = parseInt(event.currentTarget.dataset.harm);
+    return this.actor.update({ 'system.harm.value': harmValue });
   }
   
   /**
