@@ -18,9 +18,9 @@ export class Spirit77Item extends Item {
     // Data modifications in this step occur before processing embedded
     // documents or derived data.
     
-    // CRITICAL: Only prepare move data if it doesn't already exist properly
+    // CRITICAL: Only ensure move data structure exists, never trigger updates during preparation
     if (this.type === 'move') {
-      this._ensureMoveDataStructure();
+      this._ensureMoveDataStructureInMemory();
     }
   }
 
@@ -37,64 +37,39 @@ export class Spirit77Item extends Item {
   }
 
   /**
-   * Ensure move data structure exists without overwriting existing data
-   * CRITICAL FIX: Only create missing structure, never overwrite existing text
+   * Ensure move data structure exists IN MEMORY ONLY during data preparation
+   * CRITICAL FIX: Never call update() during data preparation - causes infinite loops
    */
-  _ensureMoveDataStructure() {
+  _ensureMoveDataStructureInMemory() {
     const systemData = this.system;
     
-    console.log('_ensureMoveDataStructure called with systemData:', systemData);
+    console.log('_ensureMoveDataStructureInMemory called');
     
-    // Only create structure if completely missing, never touch existing data
-    let needsUpdate = false;
-    const updateData = {};
-    
+    // Only ensure objects exist in memory, never write to database during preparation
     if (!systemData.success || typeof systemData.success !== 'object') {
-      console.log('Creating missing success object');
-      updateData['system.success'] = { value: 10, text: '' };
-      needsUpdate = true;
-    } else if (systemData.success && typeof systemData.success.value === 'undefined') {
-      console.log('Adding missing success.value');
-      updateData['system.success.value'] = 10;
-      needsUpdate = true;
+      console.log('Creating missing success object in memory');
+      systemData.success = { value: 10, text: '' };
     }
     
     if (!systemData.partial || typeof systemData.partial !== 'object') {
-      console.log('Creating missing partial object');
-      updateData['system.partial'] = { value: 7, text: '' };
-      needsUpdate = true;
-    } else if (systemData.partial && typeof systemData.partial.value === 'undefined') {
-      console.log('Adding missing partial.value');
-      updateData['system.partial.value'] = 7;
-      needsUpdate = true;
+      console.log('Creating missing partial object in memory');
+      systemData.partial = { value: 7, text: '' };
     }
     
     if (!systemData.failure || typeof systemData.failure !== 'object') {
-      console.log('Creating missing failure object');
-      updateData['system.failure'] = { text: '' };
-      needsUpdate = true;
+      console.log('Creating missing failure object in memory');
+      systemData.failure = { text: '' };
     }
     
     // Only set defaults for completely missing values
     if (!systemData.stat) {
-      updateData['system.stat'] = 'might';
-      needsUpdate = true;
+      systemData.stat = 'might';
     }
     if (!systemData.moveType) {
-      updateData['system.moveType'] = 'basic';
-      needsUpdate = true;
+      systemData.moveType = 'basic';
     }
     
-    // Apply updates asynchronously if needed
-    if (needsUpdate) {
-      console.log('Applying structure updates:', updateData);
-      // Use setTimeout to prevent recursion during data preparation
-      setTimeout(() => {
-        this.update(updateData);
-      }, 1);
-    }
-    
-    console.log('Final systemData after _ensureMoveDataStructure:', systemData);
+    console.log('Final systemData after _ensureMoveDataStructureInMemory:', systemData);
   }
 
   /**
