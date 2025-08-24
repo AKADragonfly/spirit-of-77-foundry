@@ -13,8 +13,9 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
       width: 520,
       height: 480,
       tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "description" }],
-      submitOnChange: false,  // Prevent auto-submission on every keystroke
-      submitOnClose: true
+      submitOnChange: true,  // CRITICAL: Enable auto-save on changes
+      submitOnClose: true,   // Ensure data saves when closing
+      closeOnSubmit: false   // Don't close when submitting
     });
   }
 
@@ -32,8 +33,10 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
     // Use a safe clone of the item data for further operations
     const itemData = context.item;
 
-    console.log('Item data in getData:', itemData.system);
-    console.log('FULL ITEM DATA:', JSON.stringify(itemData, null, 2)); // ADD THIS LINE
+    console.log('=== ITEM SHEET getData ===');
+    console.log('Item type:', itemData.type);
+    console.log('Item system data:', itemData.system);
+    console.log('Full item data structure:', JSON.stringify(itemData, null, 2));
 
     // Retrieve the roll data for TinyMCE editors
     context.rollData = {};
@@ -48,6 +51,8 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
     // Prepare type-specific data
     this._prepareItemTypeData(context);
 
+    console.log('Final context being passed to template:', context);
+
     return context;
   }
 
@@ -58,6 +63,13 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
     const itemData = context.item;
 
     if (itemData.type === 'move') {
+      // CRITICAL: Ensure all move data exists with defaults
+      if (!itemData.system.success) itemData.system.success = { value: 10, text: '' };
+      if (!itemData.system.partial) itemData.system.partial = { value: 7, text: '' };
+      if (!itemData.system.failure) itemData.system.failure = { text: '' };
+      
+      console.log('Move data after defaults:', itemData.system);
+      
       // Prepare stat options for moves
       context.statOptions = [];
       const statKeys = ['might', 'hustle', 'brains', 'smooth', 'soul'];
@@ -157,6 +169,28 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
 
     // Handle rollable buttons
     html.find('.rollable').click(this._onRoll.bind(this));
+    
+    // CRITICAL: Add explicit change handlers for form fields
+    html.find('input, select, textarea').change(this._onFieldChange.bind(this));
+  }
+
+  /**
+   * Handle field changes and force immediate save
+   */
+  async _onFieldChange(event) {
+    console.log('Field changed:', event.target.name, 'New value:', event.target.value);
+    
+    // Force submit the form to save changes immediately
+    if (this.isEditable && !this._submitting) {
+      this._submitting = true;
+      try {
+        await this.submit();
+      } catch (error) {
+        console.error('Error submitting form:', error);
+      } finally {
+        this._submitting = false;
+      }
+    }
   }
 
   /**
@@ -174,10 +208,13 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
   }
 
   /**
-   * SIMPLIFIED: Override the default update behavior to handle arrays properly
+   * CRITICAL: Completely rewritten update method to handle move data properly
    */
   async _updateObject(event, formData) {
-    console.log('Form submission - Raw form data:', formData);
+    console.log('=== _updateObject called ===');
+    console.log('Event:', event);
+    console.log('Raw form data:', formData);
+    console.log('Current item data before update:', this.item.system);
     
     // Handle comma-separated arrays for traits and modifications
     if (formData['system.traits'] && typeof formData['system.traits'] === 'string') {
@@ -188,12 +225,59 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
       formData['system.modifications'] = formData['system.modifications'].split(',').map(s => s.trim()).filter(s => s);
     }
 
-    // Process nested object data properly
-    const processedData = foundry.utils.expandObject(formData);
-    console.log('After expandObject:', processedData);
+    // CRITICAL: Special handling for move data
+    if (this.item.type === 'move') {
+      console.log('Processing move data...');
+      
+      // Ensure success/partial/failure objects are properly structured
+      const processedData = {};
+      
+      for (const [key, value] of Object.entries(formData)) {
+        if (key.startsWith('system.success.') || key.startsWith('system.partial.') || key.startsWith('system.failure.')) {
+          // These are nested object properties
+          const parts = key.split('.');
+          if (!processedData.system) processedData.system = {};
+          if (!processedData.system[parts[1]]) processedData.system[parts[1]] = {};
+          
+          // Convert numbers where appropriate
+          let processedValue = value;
+          if (parts[2] === 'value' && typeof value === 'string') {
+            processedValue = parseInt(value) || 0;
+          }
+          
+          processedData.system[parts[1]][parts[2]] = processedValue;
+        } else {
+          // Direct property
+          processedData[key] = value;
+        }
+      }
+      
+      console.log('Processed move data:', processedData);
+      
+      // Apply the update
+      return this.object.update(processedData);
+    } else {
+      // For non-move items, use standard processing
+      const processedData = foundry.utils.expandObject(formData);
+      console.log('Standard processed data:', processedData);
+      
+      return this.object.update(processedData);
+    }
+  }
+
+  /**
+   * Override the close method to ensure data is saved
+   */
+  async close(options = {}) {
+    // Force a final save before closing
+    if (this.isEditable && this.element.length > 0) {
+      try {
+        await this.submit();
+      } catch (error) {
+        console.warn('Error saving data on close:', error);
+      }
+    }
     
-    // Update the object
-    return this.object.update(processedData);
+    return super.close(options);
   }
 }
-
