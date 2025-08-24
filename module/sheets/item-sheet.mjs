@@ -33,6 +33,7 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
     const itemData = context.item;
 
     console.log('Item data in getData:', itemData.system);
+    console.log('FULL ITEM DATA:', JSON.stringify(itemData, null, 2)); // ADD THIS LINE
 
     // Retrieve the roll data for TinyMCE editors
     context.rollData = {};
@@ -195,3 +196,4 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
     return this.object.update(processedData);
   }
 }
+
