@@ -13,9 +13,8 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
       width: 520,
       height: 480,
       tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "description" }],
-      submitOnChange: true,  // CRITICAL: Enable auto-save on changes
-      submitOnClose: true,   // Ensure data saves when closing
-      closeOnSubmit: false   // Don't close when submitting
+      submitOnChange: false,  // Keep your original setting
+      submitOnClose: true     // Keep your original setting
     });
   }
 
@@ -33,10 +32,8 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
     // Use a safe clone of the item data for further operations
     const itemData = context.item;
 
-    console.log('=== ITEM SHEET getData ===');
-    console.log('Item type:', itemData.type);
-    console.log('Item system data:', itemData.system);
-    console.log('Full item data structure:', JSON.stringify(itemData, null, 2));
+    console.log('Item data in getData:', itemData.system);
+    console.log('FULL ITEM DATA:', JSON.stringify(itemData, null, 2));
 
     // Retrieve the roll data for TinyMCE editors
     context.rollData = {};
@@ -51,8 +48,6 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
     // Prepare type-specific data
     this._prepareItemTypeData(context);
 
-    console.log('Final context being passed to template:', context);
-
     return context;
   }
 
@@ -63,13 +58,6 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
     const itemData = context.item;
 
     if (itemData.type === 'move') {
-      // CRITICAL: Ensure all move data exists with defaults
-      if (!itemData.system.success) itemData.system.success = { value: 10, text: '' };
-      if (!itemData.system.partial) itemData.system.partial = { value: 7, text: '' };
-      if (!itemData.system.failure) itemData.system.failure = { text: '' };
-      
-      console.log('Move data after defaults:', itemData.system);
-      
       // Prepare stat options for moves
       context.statOptions = [];
       const statKeys = ['might', 'hustle', 'brains', 'smooth', 'soul'];
@@ -85,7 +73,7 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
     if (itemData.type === 'gear') {
       // Prepare weapon range options for gear (if it's a weapon)
       context.rangeOptions = [];
-      const ranges = ['close', 'reach', 'near', 'far'];
+      const ranges = ['close', 'near', 'far']; // Removed 'reach' as ChatGPT noted
       for (const key of ranges) {
         context.rangeOptions.push({
           key: key,
@@ -169,28 +157,6 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
 
     // Handle rollable buttons
     html.find('.rollable').click(this._onRoll.bind(this));
-    
-    // CRITICAL: Add explicit change handlers for form fields
-    html.find('input, select, textarea').change(this._onFieldChange.bind(this));
-  }
-
-  /**
-   * Handle field changes and force immediate save
-   */
-  async _onFieldChange(event) {
-    console.log('Field changed:', event.target.name, 'New value:', event.target.value);
-    
-    // Force submit the form to save changes immediately
-    if (this.isEditable && !this._submitting) {
-      this._submitting = true;
-      try {
-        await this.submit();
-      } catch (error) {
-        console.error('Error submitting form:', error);
-      } finally {
-        this._submitting = false;
-      }
-    }
   }
 
   /**
@@ -208,76 +174,39 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
   }
 
   /**
-   * CRITICAL: Completely rewritten update method to handle move data properly
+   * CHATGPT'S APPROACH: Simple and focused _updateObject
    */
   async _updateObject(event, formData) {
-    console.log('=== _updateObject called ===');
-    console.log('Event:', event);
-    console.log('Raw form data:', formData);
-    console.log('Current item data before update:', this.item.system);
-    
-    // Handle comma-separated arrays for traits and modifications
-    if (formData['system.traits'] && typeof formData['system.traits'] === 'string') {
-      formData['system.traits'] = formData['system.traits'].split(',').map(s => s.trim()).filter(s => s);
+    console.log('Form submission - Raw form data:', formData);
+
+    // 1) Coerce comma-separated lists to arrays where appropriate
+    //    (only applies to types that actually have these props)
+    if (typeof formData['system.traits'] === 'string') {
+      formData['system.traits'] = formData['system.traits']
+        .split(',').map(s => s.trim()).filter(Boolean);
     }
-    
-    if (formData['system.modifications'] && typeof formData['system.modifications'] === 'string') {
-      formData['system.modifications'] = formData['system.modifications'].split(',').map(s => s.trim()).filter(s => s);
+    if (typeof formData['system.modifications'] === 'string') {
+      formData['system.modifications'] = formData['system.modifications']
+        .split(',').map(s => s.trim()).filter(Boolean);
     }
 
-    // CRITICAL: Special handling for move data
+    // 2) Expand dot-paths into a nested object so Foundry updates correctly
+    const expanded = foundry.utils.expandObject(formData);
+    console.log('After expandObject:', expanded);
+
+    // 3) Type coercion for move fields so numbers stay numbers
     if (this.item.type === 'move') {
-      console.log('Processing move data...');
-      
-      // Ensure success/partial/failure objects are properly structured
-      const processedData = {};
-      
-      for (const [key, value] of Object.entries(formData)) {
-        if (key.startsWith('system.success.') || key.startsWith('system.partial.') || key.startsWith('system.failure.')) {
-          // These are nested object properties
-          const parts = key.split('.');
-          if (!processedData.system) processedData.system = {};
-          if (!processedData.system[parts[1]]) processedData.system[parts[1]] = {};
-          
-          // Convert numbers where appropriate
-          let processedValue = value;
-          if (parts[2] === 'value' && typeof value === 'string') {
-            processedValue = parseInt(value) || 0;
-          }
-          
-          processedData.system[parts[1]][parts[2]] = processedValue;
-        } else {
-          // Direct property
-          processedData[key] = value;
-        }
-      }
-      
-      console.log('Processed move data:', processedData);
-      
-      // Apply the update
-      return this.object.update(processedData);
-    } else {
-      // For non-move items, use standard processing
-      const processedData = foundry.utils.expandObject(formData);
-      console.log('Standard processed data:', processedData);
-      
-      return this.object.update(processedData);
-    }
-  }
+      const sys = expanded.system ?? (expanded.system = {});
+      sys.modifier = Number(sys.modifier ?? 0) || 0;
 
-  /**
-   * Override the close method to ensure data is saved
-   */
-  async close(options = {}) {
-    // Force a final save before closing
-    if (this.isEditable && this.element.length > 0) {
-      try {
-        await this.submit();
-      } catch (error) {
-        console.warn('Error saving data on close:', error);
-      }
+      if (sys.success) sys.success.value = Number(sys.success.value ?? 10);
+      if (sys.partial) sys.partial.value = Number(sys.partial.value ?? 7);
+      // success.text / partial.text / failure.text remain strings (OK)
     }
-    
-    return super.close(options);
+
+    console.log('Final expanded data being saved:', expanded);
+
+    // 4) Persist
+    return await this.item.update(expanded);
   }
 }
