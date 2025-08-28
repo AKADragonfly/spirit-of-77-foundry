@@ -13,8 +13,8 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
       width: 520,
       height: 480,
       tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "description" }],
-      submitOnChange: false,  // Keep your original setting
-      submitOnClose: true     // Keep your original setting
+      submitOnChange: false,
+      submitOnClose: true
     });
   }
 
@@ -33,7 +33,6 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
     const itemData = context.item;
 
     console.log('Item data in getData:', itemData.system);
-    console.log('FULL ITEM DATA:', JSON.stringify(itemData, null, 2));
 
     // Retrieve the roll data for TinyMCE editors
     context.rollData = {};
@@ -71,9 +70,9 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
     }
 
     if (itemData.type === 'gear') {
-      // Prepare weapon range options for gear (if it's a weapon)
+      // Prepare weapon range options for gear
       context.rangeOptions = [];
-      const ranges = ['close', 'near', 'far']; // Removed 'reach' as ChatGPT noted
+      const ranges = ['close', 'near', 'far'];
       for (const key of ranges) {
         context.rangeOptions.push({
           key: key,
@@ -174,39 +173,45 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
   }
 
   /**
-   * CHATGPT'S APPROACH: Simple and focused _updateObject
+   * FIXED: Simple and reliable _updateObject method
    */
   async _updateObject(event, formData) {
     console.log('Form submission - Raw form data:', formData);
 
-    // 1) Coerce comma-separated lists to arrays where appropriate
-    //    (only applies to types that actually have these props)
-    if (typeof formData['system.traits'] === 'string') {
+    // Handle array fields that come in as comma-separated strings
+    if (formData['system.traits'] && typeof formData['system.traits'] === 'string') {
       formData['system.traits'] = formData['system.traits']
-        .split(',').map(s => s.trim()).filter(Boolean);
+        .split(',')
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
     }
-    if (typeof formData['system.modifications'] === 'string') {
+
+    if (formData['system.modifications'] && typeof formData['system.modifications'] === 'string') {
       formData['system.modifications'] = formData['system.modifications']
-        .split(',').map(s => s.trim()).filter(Boolean);
+        .split(',')
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
     }
 
-    // 2) Expand dot-paths into a nested object so Foundry updates correctly
-    const expanded = foundry.utils.expandObject(formData);
-    console.log('After expandObject:', expanded);
-
-    // 3) Type coercion for move fields so numbers stay numbers
-    if (this.item.type === 'move') {
-      const sys = expanded.system ?? (expanded.system = {});
-      sys.modifier = Number(sys.modifier ?? 0) || 0;
-
-      if (sys.success) sys.success.value = Number(sys.success.value ?? 10);
-      if (sys.partial) sys.partial.value = Number(sys.partial.value ?? 7);
-      // success.text / partial.text / failure.text remain strings (OK)
+    // Convert string numbers to actual numbers for specific fields
+    if (formData['system.modifier']) {
+      const modifier = formData['system.modifier'];
+      if (typeof modifier === 'string' && modifier.trim() !== '') {
+        formData['system.modifier'] = parseInt(modifier) || 0;
+      }
     }
 
-    console.log('Final expanded data being saved:', expanded);
+    if (formData['system.success.value']) {
+      formData['system.success.value'] = parseInt(formData['system.success.value']) || 10;
+    }
 
-    // 4) Persist
-    return await this.item.update(expanded);
+    if (formData['system.partial.value']) {
+      formData['system.partial.value'] = parseInt(formData['system.partial.value']) || 7;
+    }
+
+    console.log('Final form data being saved:', formData);
+
+    // Let Foundry handle the rest - don't use expandObject
+    return super._updateObject(event, formData);
   }
 }
