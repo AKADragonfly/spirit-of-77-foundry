@@ -57,6 +57,20 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
     const itemData = context.item;
 
     if (itemData.type === 'move') {
+      // Ensure move has proper defaults
+      if (!itemData.system.moveType) {
+        itemData.system.moveType = 'basic';
+      }
+      if (!itemData.system.success) {
+        itemData.system.success = { value: 10, text: '' };
+      }
+      if (!itemData.system.partial) {
+        itemData.system.partial = { value: 7, text: '' };
+      }
+      if (!itemData.system.failure) {
+        itemData.system.failure = { text: '' };
+      }
+
       // Prepare stat options for moves
       context.statOptions = [];
       const statKeys = ['might', 'hustle', 'brains', 'smooth', 'soul'];
@@ -173,45 +187,105 @@ export class Spirit77ItemSheet extends foundry.appv1.sheets.ItemSheet {
   }
 
   /**
-   * FIXED: Simple and reliable _updateObject method
+   * FIXED: Comprehensive _updateObject method with extensive debugging
    */
   async _updateObject(event, formData) {
-    console.log('Form submission - Raw form data:', formData);
+    console.log('=== UPDATE OBJECT START ===');
+    console.log('Raw form data:', formData);
+    console.log('Current item system data:', this.item.system);
 
-    // Handle array fields that come in as comma-separated strings
-    if (formData['system.traits'] && typeof formData['system.traits'] === 'string') {
-      formData['system.traits'] = formData['system.traits']
-        .split(',')
-        .map(s => s.trim())
-        .filter(s => s.length > 0);
+    // Create update data starting with current system data
+    const currentSystem = foundry.utils.deepClone(this.item.system);
+    console.log('Current system clone:', currentSystem);
+
+    // Build update object manually to avoid data loss
+    const updateData = {};
+
+    // Handle name separately
+    if (formData.name !== undefined) {
+      updateData.name = formData.name;
     }
 
-    if (formData['system.modifications'] && typeof formData['system.modifications'] === 'string') {
-      formData['system.modifications'] = formData['system.modifications']
-        .split(',')
-        .map(s => s.trim())
-        .filter(s => s.length > 0);
-    }
+    // Build system updates by preserving existing data and only updating changed fields
+    const systemUpdates = {};
 
-    // Convert string numbers to actual numbers for specific fields
-    if (formData['system.modifier']) {
-      const modifier = formData['system.modifier'];
-      if (typeof modifier === 'string' && modifier.trim() !== '') {
-        formData['system.modifier'] = parseInt(modifier) || 0;
+    // Process each form field
+    for (const [key, value] of Object.entries(formData)) {
+      if (key.startsWith('system.')) {
+        const fieldPath = key.substring(7); // Remove 'system.' prefix
+        
+        // Handle nested fields properly
+        if (fieldPath.includes('.')) {
+          const [mainField, subField] = fieldPath.split('.', 2);
+          if (!systemUpdates[mainField]) {
+            systemUpdates[mainField] = foundry.utils.deepClone(currentSystem[mainField] || {});
+          }
+          systemUpdates[mainField][subField] = value;
+        } else {
+          systemUpdates[fieldPath] = value;
+        }
       }
     }
 
-    if (formData['system.success.value']) {
-      formData['system.success.value'] = parseInt(formData['system.success.value']) || 10;
+    console.log('System updates:', systemUpdates);
+
+    // Handle move-specific processing
+    if (this.item.type === 'move') {
+      // Ensure moveType is preserved
+      if (!systemUpdates.moveType && currentSystem.moveType) {
+        systemUpdates.moveType = currentSystem.moveType;
+      }
+
+      // Ensure nested objects exist with proper structure
+      if (!systemUpdates.success) {
+        systemUpdates.success = currentSystem.success || { value: 10, text: '' };
+      }
+      if (!systemUpdates.partial) {
+        systemUpdates.partial = currentSystem.partial || { value: 7, text: '' };
+      }
+      if (!systemUpdates.failure) {
+        systemUpdates.failure = currentSystem.failure || { text: '' };
+      }
+
+      // Convert numeric fields
+      if (systemUpdates.modifier !== undefined) {
+        if (typeof systemUpdates.modifier === 'string') {
+          systemUpdates.modifier = systemUpdates.modifier.trim() === '' ? '' : (parseInt(systemUpdates.modifier) || 0);
+        }
+      }
+
+      if (systemUpdates.success?.value !== undefined) {
+        systemUpdates.success.value = parseInt(systemUpdates.success.value) || 10;
+      }
+      if (systemUpdates.partial?.value !== undefined) {
+        systemUpdates.partial.value = parseInt(systemUpdates.partial.value) || 7;
+      }
     }
 
-    if (formData['system.partial.value']) {
-      formData['system.partial.value'] = parseInt(formData['system.partial.value']) || 7;
+    // Handle array fields
+    if (systemUpdates.traits && typeof systemUpdates.traits === 'string') {
+      systemUpdates.traits = systemUpdates.traits.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    }
+    if (systemUpdates.modifications && typeof systemUpdates.modifications === 'string') {
+      systemUpdates.modifications = systemUpdates.modifications.split(',').map(s => s.trim()).filter(s => s.length > 0);
     }
 
-    console.log('Final form data being saved:', formData);
+    // Only include system in update if we have system updates
+    if (Object.keys(systemUpdates).length > 0) {
+      updateData.system = systemUpdates;
+    }
 
-    // Let Foundry handle the rest - don't use expandObject
-    return super._updateObject(event, formData);
+    console.log('Final update data:', updateData);
+    console.log('=== UPDATE OBJECT END ===');
+
+    // Use direct item update
+    try {
+      const result = await this.item.update(updateData);
+      console.log('Update successful:', result);
+      return result;
+    } catch (error) {
+      console.error('Update failed:', error);
+      throw error;
+    }
   }
 }
