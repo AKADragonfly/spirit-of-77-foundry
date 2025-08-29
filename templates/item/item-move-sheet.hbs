@@ -20,18 +20,14 @@
     </div>
     
     <div class="tab" data-group="primary" data-tab="details">
-      {{!-- Preserve moveType with explicit value --}}
-      <input name="system.moveType" type="hidden" value="{{system.moveType}}"/>
-      
-      <div class="form-group">
-        <label>Move Type:</label>
-        <span>{{capitalize system.moveType}}</span>
-        <small>Move type is set when creating the move</small>
+      {{!-- Move type is set by creation button, no need for dropdown --}}
+      <div class="form-group" style="display: none;">
+        <input name="system.moveType" type="hidden" value="{{system.moveType}}"/>
       </div>
       
       <div class="form-group">
         <label>Stat:</label>
-        <select name="system.stat" data-dtype="String">
+        <select name="system.stat">
           {{#each statOptions}}
           <option value="{{key}}" {{#if selected}}selected{{/if}}>{{label}}</option>
           {{/each}}
@@ -41,8 +37,8 @@
       <div class="form-group">
         <label>Move Modifier:</label>
         <div style="display: flex; gap: 10px; align-items: center;">
-          <input name="system.modifier" type="text" value="{{system.modifier}}" placeholder="+1" style="width: 60px;" data-dtype="String"/>
-          <input name="system.modifierDescription" type="text" value="{{system.modifierDescription}}" placeholder="when acting cool under pressure" style="flex: 1;" data-dtype="String"/>
+          <input name="system.modifier" type="text" value="{{system.modifier}}" placeholder="+1" style="width: 60px;"/>
+          <input name="system.modifierDescription" type="text" value="{{system.modifierDescription}}" placeholder="when acting cool under pressure" style="flex: 1;"/>
         </div>
         <small>Optional static bonus/penalty for this move</small>
       </div>
@@ -51,22 +47,20 @@
         <h3>Results</h3>
         
         <div class="result-group">
-          <label>Success Threshold:</label>
-          <input name="system.success.value" type="number" value="{{system.success.value}}" min="1" max="12" data-dtype="Number"/>
-          <label>Success Text:</label>
-          <textarea name="system.success.text" rows="3" placeholder="What happens on a success..." data-dtype="String">{{system.success.text}}</textarea>
+          <label>Success ({{#if system.success.value}}{{system.success.value}}{{else}}10{{/if}}+):</label>
+          <input name="system.success.value" type="number" value="{{#if system.success.value}}{{system.success.value}}{{else}}10{{/if}}" min="1" max="12" placeholder="10"/>
+          <input name="system.success.text" type="text" value="{{system.success.text}}" placeholder="What happens on a success..." style="width: 100%;" />
         </div>
         
         <div class="result-group">
-          <label>Partial Success Threshold:</label>
-          <input name="system.partial.value" type="number" value="{{system.partial.value}}" min="1" max="12" data-dtype="Number"/>
-          <label>Partial Success Text:</label>
-          <textarea name="system.partial.text" rows="3" placeholder="What happens on a partial success..." data-dtype="String">{{system.partial.text}}</textarea>
+          <label>Partial Success ({{#if system.partial.value}}{{system.partial.value}}{{else}}7{{/if}}-{{#if system.success.value}}{{subtract system.success.value 1}}{{else}}9{{/if}}):</label>
+          <input name="system.partial.value" type="number" value="{{#if system.partial.value}}{{system.partial.value}}{{else}}7{{/if}}" min="1" max="12" placeholder="7"/>
+          <textarea name="system.partial.text" placeholder="What happens on a partial success...">{{system.partial.text}}</textarea>
         </div>
         
         <div class="result-group">
-          <label>Failure Text:</label>
-          <textarea name="system.failure.text" rows="3" placeholder="What happens on a failure..." data-dtype="String">{{system.failure.text}}</textarea>
+          <label>Failure ({{#if system.partial.value}}{{subtract system.partial.value 1}}{{else}}6{{/if}} or less):</label>
+          <textarea name="system.failure.text" placeholder="What happens on a failure...">{{system.failure.text}}</textarea>
         </div>
       </div>
       
