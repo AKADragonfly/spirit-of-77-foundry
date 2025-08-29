@@ -14,54 +14,47 @@
   <section class="sheet-body">
     <div class="tab" data-group="primary" data-tab="description">
       <div class="form-group">
-        <label>Description:</label>
-        {{editor system.description target="system.description" button=true owner=owner editable=editable}}
+        <label>Move Description:</label>
+        <textarea name="system.description" rows="12" placeholder="Describe what this move does, including what happens on success (10+), partial success (7-9), and failure (6-).">{{system.description}}</textarea>
       </div>
     </div>
     
     <div class="tab" data-group="primary" data-tab="details">
-      {{!-- Move type is set by creation button, no need for dropdown --}}
-      <div class="form-group" style="display: none;">
-        <input name="system.moveType" type="hidden" value="{{system.moveType}}"/>
+      <input name="system.moveType" type="hidden" value="{{system.moveType}}"/>
+      
+      <div class="form-group">
+        <label>Move Type:</label>
+        <span>{{capitalize system.moveType}}</span>
+        <small>Move type is set when creating the move</small>
       </div>
       
       <div class="form-group">
         <label>Stat:</label>
         <select name="system.stat">
-          {{#each statOptions}}
-          <option value="{{key}}" {{#if selected}}selected{{/if}}>{{label}}</option>
-          {{/each}}
+          {{
+#each
+ statOptions}}
+          <option value="{{key}}" {{
+#if
+ selected}}selected{{
+/if
+}}>{{label}}</option>
+          {{
+/each
+}}
         </select>
       </div>
       
       <div class="form-group">
-        <label>Move Modifier:</label>
-        <div style="display: flex; gap: 10px; align-items: center;">
-          <input name="system.modifier" type="text" value="{{system.modifier}}" placeholder="+1" style="width: 60px;"/>
-          <input name="system.modifierDescription" type="text" value="{{system.modifierDescription}}" placeholder="when acting cool under pressure" style="flex: 1;"/>
-        </div>
-        <small>Optional static bonus/penalty for this move</small>
+        <label>Optional Modifier:</label>
+        <input name="system.modifier" type="text" value="{{system.modifier}}" placeholder="+1, -1, +2, etc. (leave blank if none)"/>
+        <small>Static bonus or penalty for this move</small>
       </div>
       
-      <div class="results-section">
-        <h3>Results</h3>
-        
-        <div class="result-group">
-          <label>Success ({{#if system.success.value}}{{system.success.value}}{{else}}10{{/if}}+):</label>
-          <input name="system.success.value" type="number" value="{{#if system.success.value}}{{system.success.value}}{{else}}10{{/if}}" min="1" max="12" placeholder="10"/>
-          <input name="system.success.text" type="text" value="{{system.success.text}}" placeholder="What happens on a success..." style="width: 100%;" />
-        </div>
-        
-        <div class="result-group">
-          <label>Partial Success ({{#if system.partial.value}}{{system.partial.value}}{{else}}7{{/if}}-{{#if system.success.value}}{{subtract system.success.value 1}}{{else}}9{{/if}}):</label>
-          <input name="system.partial.value" type="number" value="{{#if system.partial.value}}{{system.partial.value}}{{else}}7{{/if}}" min="1" max="12" placeholder="7"/>
-          <textarea name="system.partial.text" placeholder="What happens on a partial success...">{{system.partial.text}}</textarea>
-        </div>
-        
-        <div class="result-group">
-          <label>Failure ({{#if system.partial.value}}{{subtract system.partial.value 1}}{{else}}6{{/if}} or less):</label>
-          <textarea name="system.failure.text" placeholder="What happens on a failure...">{{system.failure.text}}</textarea>
-        </div>
+      <div class="form-group">
+        <label>Modifier Condition:</label>
+        <input name="system.modifierDescription" type="text" value="{{system.modifierDescription}}" placeholder="when you have backup, when outnumbered, etc."/>
+        <small>When does this modifier apply?</small>
       </div>
       
       <div class="form-group">
